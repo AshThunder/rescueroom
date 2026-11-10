@@ -5,6 +5,8 @@ A hold-and-rescue safety layer for DAO treasuries and AI agents on NEAR, with Se
 When a stolen key or a confused agent starts moving money, the vault holds the withdrawal, a watcher explains why it looks risky, and guardians from your Sputnik DAO can rescue the funds to a pre-set safe address. Small everyday spends still go through instantly.
 
 > Status: phase 2, NEAR testnet and Ethereum Sepolia only. Not audited. Do not use with real funds.
+>
+> Live app: **https://rescueroom.vercel.app** (dashboard, wallet signing pages, audit log, alerts, public attacker sandbox).
 
 ## Architecture
 
@@ -73,6 +75,32 @@ Current ids are in [`deploy/testnet.json`](deploy/testnet.json) and [`deploy/san
 | Vault's Sepolia address (MPC path `rescueroom-eth-1`) | [`0xFAF0Db5471b9DfD6876D349CBcAe33a6985ED31f`](https://sepolia.etherscan.io/address/0xFAF0Db5471b9DfD6876D349CBcAe33a6985ED31f) |
 | Sepolia safe address (derived from the DAO account) | [`0xf55b4654d6761e1F3EdEDD2f1c480FB4fD97911F`](https://sepolia.etherscan.io/address/0xf55b4654d6761e1F3EdEDD2f1c480FB4fD97911F) |
 
+## Live Sepolia broadcasts
+
+Real Sepolia transactions signed by a Rescue Room vault through NEAR chain signatures (MPC `v1.signer-prod.testnet`) and broadcast by the relayer. Log: [`deploy/sepolia-live.json`](deploy/sepolia-live.json), script: `scripts/sepolia-live.mjs`.
+
+| | Sepolia tx | Result |
+| --- | --- | --- |
+| Hot-allowance send, 0.001 ETH (request #19, nonce 1) | [`0x80144535…57fdb1`](https://sepolia.etherscan.io/tx/0x8014453541d2255e7fe17b03ab002489bb9a727e767bb17f3617f069e957fdb1) | mined, fee 0.000041 ETH |
+| Rescue of a held 0.01 ETH request to the DAO safe address (request #20, nonce 2) | [`0xe7d3bd40…2275f7`](https://sepolia.etherscan.io/tx/0xe7d3bd40c7bcc737ab0a8b9a088330356b2db918918a3888e55fad2c172275f7) | mined, fee 0.000041 ETH |
+
+Signer: `vault.rescueroom-j60ox4.testnet`, Sepolia address [`0x89250Ea4…179B74`](https://sepolia.etherscan.io/address/0x89250Ea451fE4141aE4C31584E41841f53179B74). The first attempt ([`0xc6b51cca`](https://sepolia.etherscan.io/tx/0xc6b51cca4295135ae7efb295c2047993c9c801b3b14aa9393747aa17672118d1)) used a 21,000 gas limit and ran out of gas: Sepolia now charges about 207k gas for a value transfer that creates a new account. A DAO proposal raised the vault's gas limit to 220k (cap 2 gwei, tip 0.2 gwei) and called the new `dao_resync_evm_nonce`, which rewinds the vault's nonce to the chain nonce and marks stale signed transactions as superseded so one unmineable transaction cannot block the queue.
+
+## Hosting
+
+The web app and a small public API run on Vercel (`vercel/`, assembled by `node scripts/vercel-build.mjs` into `.vercel-out/`).
+
+| Route | What it does | Keys |
+| --- | --- | --- |
+| `/api/events` | NEP-297 events from the FastNEAR tx API, CDN-cached 15s | none |
+| `/api/alerts` | alerts derived from the same events and rules | none |
+| `/api/webhook` | demo receiver that verifies signed alert webhooks | `ALERT_WEBHOOK_SECRET` |
+| `POST /api/sandbox/run` | runs the attacker and streams steps (SSE in the response) | `SANDBOX_AGENT_KEY` only |
+
+The public sandbox function holds only the sandbox agent key: a function-call key on the sandbox vault that can call `request_withdraw` and nothing else. The defenders (watcher scoring, two guardian votes, DAO unfreeze, refunds, re-adding the same agent key) run in `server/src/sandbox-defender.js` on the operator's machine with `npm run api`; no owner, guardian, DAO, watcher or relayer key is configured on Vercel. If the defenders are offline, the run still shows the drain held by the vault. Limits are checked on chain, so they hold across instances: one run at a time, a 90s global cooldown, 40 runs a day, plus 2 runs per 10 minutes per IP.
+
+Telegram: start a chat with the bot and send `/start`. When `TELEGRAM_CHAT_ID` is unset, the API picks the chat id from the first private `/start`, saves it to `~/.rescueroom/telegram.json` (mode 600) and `.env`, and sends a test alert. Alert buttons open the hosted signing pages. Alerts from the public sandbox vault are logged but not delivered unless `ALERT_SANDBOX=1`.
+
 ## Setup
 
 Requirements: Node 22+, Rust stable 1.95+ with `wasm32-unknown-unknown`, `cargo-near` 0.23, and a funded NEAR testnet account.
@@ -80,7 +108,7 @@ Requirements: Node 22+, Rust stable 1.95+ with `wasm32-unknown-unknown`, `cargo-
 ```bash
 npm install && (cd web && npm install)
 cp .env.example .env            # every integration is optional; see below
-npm test                        # 30 contract tests + 13 watcher, alert and API tests
+npm test                        # 33 contract tests + 14 watcher, alert and API tests
 npm run build:contract
 
 node scripts/deploy.mjs <main>.testnet          # roles, guardian DAO, demo vault
@@ -104,9 +132,9 @@ Optional integrations, each switched on by its env vars in `.env`:
 | Webhook alerts | `ALERT_WEBHOOK_URL`, `ALERT_WEBHOOK_SECRET` | skipped |
 | Email alerts | `SMTP_URL`, `ALERT_EMAIL_TO`, `ALERT_EMAIL_FROM` | skipped |
 | Sepolia sends | ETH at the vault's Sepolia address (gas) | signatures are produced and verified, not broadcast |
-| Public sandbox | a public URL in front of `npm run api` with `TRUST_PROXY=1` | localhost only |
+| Public sandbox | `SANDBOX_AGENT_KEY` on the host, defenders running via `npm run api` | localhost only |
 
-Webhook receivers verify `X-RescueRoom-Signature: sha256=<hex>` = HMAC-SHA256(secret, `<X-RescueRoom-Timestamp>.<raw body>`) and reject timestamps older than 5 minutes. `verifyWebhook()` in `alerts/src/channels.js` does both.
+Webhook receivers verify `X-RescueRoom-Signature: sha256=<hex>` = HMAC-SHA256(secret, `<X-RescueRoom-Timestamp>.<raw body>`) and reject timestamps older than 5 minutes. `verifyWebhook()` in `alerts/src/webhook-verify.js` does both.
 
 ## Upgrades go through the DAO
 
@@ -226,7 +254,8 @@ console.log(req.hot ? 'paid' : `held until ${new Date(Number(req.release_ms)).to
 contracts/vault   Rust near-sdk 5 contract + unit tests (DAO-only upgrade, hold floor)
 watcher/          rules scorer, evidence signing, explainer interface (+ tests)
 alerts/           event-to-alert rules and delivery: Telegram, HMAC webhook, SMTP email (+ tests)
-server/           local API: NEP-297 indexer (FastNEAR), alerts dispatcher, attacker sandbox, rate limits
+server/           local API: NEP-297 indexer (FastNEAR), alerts dispatcher, sandbox attacker + defenders, rate limits
+vercel/           hosted API functions and vercel.json (built by scripts/vercel-build.mjs)
 attacker/         scripted attacker using a stolen agent key
 scripts/          deploy, lock, DAO upgrade, e2e scenarios, relayer, DAO helpers
 web/              Vite + React + TypeScript dashboard with NEAR Wallet Selector
@@ -248,12 +277,13 @@ deploy/           public deployment ids and scenario logs (no secrets)
 | Relayer | Broadcast or withhold signed Sepolia txs | Cannot change destination, amount, nonce or fees: they are inside the signed payload. |
 | Minority of guardians | Vote rescue | Needs quorum and the distinct floor. Rescue only moves funds to the pre-set safe address. |
 | Majority of guardians / DAO | Rescue, unfreeze, change config, upgrade code | This is the trust root. Choose the council accordingly; the DAO's own policy and proposal periods apply. |
-| Anyone | Call `execute` after a hold; run the sandbox | Intended. `execute` only releases what passed its hold. The sandbox touches a separate vault and is rate limited per client and per day. |
+| Anyone | Call `execute` after a hold; run the sandbox | Intended. `execute` only releases what passed its hold. The sandbox touches a separate vault and is rate limited on chain (one at a time, cooldown, daily cap) and per IP. |
+| Hosting provider or a leaked sandbox key | Use the sandbox agent key | It is a function-call key on the sandbox vault for `request_withdraw` only; the worst case is a held drain of sandbox testnet NEAR that the defenders rescue. No privileged key is on the host. |
 | Alert channel (Telegram, email, webhook) | Show a message | Alerts carry links only; every action is signed in the user's wallet after the page shows the exact call. Webhooks are HMAC-signed with a timestamp. |
 
 Known limits:
 
-- One Sepolia nonce stream. A signed tx that is never broadcast blocks later ones until it is broadcast or re-signed with `retry_sign`.
+- One Sepolia nonce stream. A signed tx that can never be mined blocks later ones; the DAO can call `dao_resync_evm_nonce` to rewind to the chain nonce and supersede it. Superseded signatures stay valid, so only one tx per nonce can ever be mined.
 - ETH rescue moves the requested amount, not the full Sepolia balance (the contract cannot read Sepolia balances).
 - Scores are rules-based. The LLM explainer only writes the explanation.
 - The event indexer depends on the FastNEAR transactions API; events are cached locally and the contract state stays the source of truth.

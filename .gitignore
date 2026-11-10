@@ -13,3 +13,8 @@ deploy/state.local.json
 
 # local API data (event cache, alert log)
 server/data/
+
+# hosted build output and Vercel project link
+.vercel-out/
+.vercel-link/
+.vercel/

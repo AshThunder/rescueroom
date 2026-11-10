@@ -21,7 +21,9 @@ export function createDispatcher({ indexer, dataDir, view, mainVault, app = proc
     if (ev.data?.id !== undefined && ev.event === 'risk_scored') req = await view(ev.account, 'get_request', { id: ev.data.id }).catch(() => undefined);
     const a = alertFor(ev, { app, req, mainVault });
     if (!a) return;
-    a.delivery = await deliver(a);
+    // Public sandbox runs would page people for every visitor: log them, deliver only if ALERT_SANDBOX=1.
+    const muted = mainVault && ev.account !== mainVault && process.env.ALERT_SANDBOX !== '1';
+    a.delivery = muted ? { all: 'muted (sandbox vault; set ALERT_SANDBOX=1)' } : await deliver(a);
     fs.appendFileSync(LOG, JSON.stringify(a) + '\n');
     console.log(`alert ${a.kind} ${a.title} ->`, a.delivery);
   }

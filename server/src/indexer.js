@@ -7,7 +7,7 @@ import { EventEmitter } from 'node:events';
 import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-export const DATA_DIR = process.env.RR_DATA_DIR || path.resolve(HERE, '../data');
+export const DATA_DIR = process.env.RR_DATA_DIR || (process.env.VERCEL ? '/tmp/rescueroom' : path.resolve(HERE, '../data'));
 const API = process.env.FASTNEAR_TX_API || 'https://tx.test.fastnear.com';
 const EXPLORER = process.env.NEAR_EXPLORER || 'https://testnet.nearblocks.io';
 

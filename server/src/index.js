@@ -5,17 +5,21 @@ import http from 'node:http';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
-import { loadState, view } from '../../scripts/lib/near.js';
+import { Account, KeyPairSigner } from 'near-api-js';
+import { loadState, view, call, provider, loadKeyPair } from '../../scripts/lib/near.js';
 import { Indexer, DATA_DIR } from './indexer.js';
 import { createLimiter } from './ratelimit.js';
-import { runSandbox, sandboxConfig } from './sandbox.js';
+import { runAttack, Busy } from './sandbox-attack.js';
+import { startDefender } from './sandbox-defender.js';
 import { createDispatcher } from '../../alerts/src/dispatcher.js';
 import { loadChatId, waitForStart } from '../../alerts/src/telegram-link.js';
 
 const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.HOST || '127.0.0.1';
 const st = loadState();
-const sb = sandboxConfig();
+// The defender (watcher + guardian responders + reset) runs here with the privileged keys.
+const defender = process.env.SANDBOX_DEFENDER === '0' ? null : startDefender();
+const sb = st.sandbox?.vault ? { V: st.sandbox.vault, SAFE: st.sandbox.safe } : null;
 const accounts = [st.vault, sb?.V].filter(Boolean);
 loadChatId();
 const indexer = new Indexer(accounts).start();
@@ -43,7 +47,14 @@ function startRun(client) {
   runs.set(id, run);
   active = run;
   emit({ type: 'queued', id });
-  runSandbox(emit)
+  const keyId = `agent-key-${sb.V}`;
+  const kp = loadKeyPair(keyId);
+  runAttack({
+    emit, call, view, V: sb.V, safe: sb.SAFE, attacker: st.attacker,
+    balance: async (id) => (await provider.viewAccount({ accountId: id })).amount,
+    agent: new Account(sb.V, provider, new KeyPairSigner(kp)), agentPk: kp.getPublicKey().toString(),
+    cooldownS: 0,
+  })
     .catch((e) => emit({ type: 'error', message: String(e.message).slice(0, 300) }))
     .finally(() => {
       run.done = true;
@@ -66,7 +77,7 @@ const server = http.createServer(async (req, res) => {
   const p = url.pathname;
   try {
     if (req.method === 'GET' && p === '/api/health') {
-      return json(res, 200, { ok: true, accounts, indexer: { last_sync: indexer.lastSync, last_error: indexer.lastError, events: indexer.events(undefined, { limit: 1e6 }).length }, sandbox: sb ? { vault: sb.V, busy: !!active, limits: limiter.stats() } : null, alerts: alerts?.channels() ?? null });
+      return json(res, 200, { ok: true, accounts, indexer: { last_sync: indexer.lastSync, last_error: indexer.lastError, events: indexer.events(undefined, { limit: 1e6 }).length }, sandbox: sb ? { vault: sb.V, busy: !!active, limits: limiter.stats(), defender: defender?.state ?? null } : null, alerts: alerts?.channels() ?? null });
     }
     if (req.method === 'GET' && p === '/api/events') {
       const limit = Math.min(Number(url.searchParams.get('limit') || 200), 1000);
@@ -83,6 +94,14 @@ const server = http.createServer(async (req, res) => {
       const client = clientOf(req);
       const lim = limiter.check(client);
       if (!lim.ok) return json(res, 429, { error: lim.reason, retry_after_s: lim.retry_after_s }, { 'retry-after': String(lim.retry_after_s) });
+      try {
+        const kp = loadKeyPair(`agent-key-${sb.V}`);
+        const { admission } = await import('./sandbox-attack.js');
+        await admission({ view, V: sb.V, agentPk: kp.getPublicKey().toString(), cooldownS: 0 });
+      } catch (e) {
+        if (e instanceof Busy) return json(res, 409, { error: e.message, retry_after_s: e.retry_after_s }, { 'retry-after': String(e.retry_after_s) });
+        throw e;
+      }
       limiter.take(client);
       const run = startRun(client);
       return json(res, 202, { run: run.id, stream: `/api/sandbox/stream/${run.id}` });

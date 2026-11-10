@@ -31,7 +31,7 @@ export function Alerts() {
           <p className="psub">Alerts tell people a hold exists. Their buttons only open a signing page; they never sign anything themselves.</p>
         </div>
       </div>
-      {err && <div className="banner a mt24 small" role="status">The local API is not running ({err}). Start it with <span className="mono">npm run api</span>.</div>}
+      {err && <div className="banner a mt24 small" role="status">The API is not reachable ({err}). Locally, start it with <span className="mono">npm run api</span>.</div>}
       <div className="split mt24">
         <Card title="Recent alerts" aside={d ? `${d.recent.length} shown` : undefined}>
           {!d ? (
