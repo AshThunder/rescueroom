@@ -1,0 +1,31 @@
+[package]
+name = "rescueroom-vault"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.95"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[package.metadata.near.reproducible_build]
+image = "sourcescan/cargo-near:0.23.0-rust-1.86.0"
+image_digest = ""
+passed_env = []
+container_build_command = ["cargo", "near", "build", "non-reproducible-wasm", "--locked"]
+
+[dependencies]
+near-sdk = { version = "5.30", features = [] }
+hex = "0.4"
+
+[dev-dependencies]
+near-sdk = { version = "5.30", features = ["unit-testing"] }
+serde_json = "1"
+ed25519-dalek = "2"
+
+[profile.release]
+codegen-units = 1
+opt-level = "z"
+lto = true
+debug = false
+panic = "abort"
+overflow-checks = true

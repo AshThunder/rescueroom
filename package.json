@@ -1,0 +1,19 @@
+{
+  "name": "rescueroom",
+  "private": true,
+  "type": "module",
+  "workspaces": ["watcher", "alerts", "attacker", "scripts"],
+  "scripts": {
+    "test": "npm run test:contract && npm run test:watcher",
+    "test:contract": "cd contracts/vault && cargo test",
+    "test:watcher": "node --test watcher/test/rules.test.js",
+    "build:contract": "cd contracts/vault && cargo near build non-reproducible-wasm",
+    "deploy": "node scripts/deploy.mjs",
+    "e2e": "node scripts/e2e.mjs all",
+    "watcher": "node watcher/src/watcher.js",
+    "alerts": "node alerts/src/alerts.js",
+    "relayer": "node scripts/relayer.mjs",
+    "attacker": "node attacker/src/attacker.js",
+    "web": "cd web && npm run dev"
+  }
+}

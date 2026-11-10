@@ -1,0 +1,21 @@
+[
+  {
+    "at": "2026-11-10T09:52:47.584Z",
+    "name": "Owner filed cover claim for 0.8000 NEAR lost in H-0004",
+    "hash": "GcXoYzXjffi3oAfSyiiZFMZZ2nMeKz6wo7RgLoZecoA2",
+    "explorer": "https://testnet.nearblocks.io/txns/GcXoYzXjffi3oAfSyiiZFMZZ2nMeKz6wo7RgLoZecoA2"
+  },
+  {
+    "at": "2026-11-10T09:52:49.355Z",
+    "name": "Guardian g1 approved claim",
+    "hash": "EA1DvMk3LfrPMzuSxh35bgaMSACTUh26khQbHAfsLyEy",
+    "explorer": "https://testnet.nearblocks.io/txns/EA1DvMk3LfrPMzuSxh35bgaMSACTUh26khQbHAfsLyEy"
+  },
+  {
+    "at": "2026-11-10T09:52:54.784Z",
+    "name": "Guardian g3 approved -> cover paid",
+    "hash": "FRntGZYPnAxrNQUvq5EFGHvwFF1JT2E7yRbq6CQS9eSM",
+    "note": "payout 0.8000 NEAR (cap 1.0000); pool 1.2220 NEAR; solvency 611%",
+    "explorer": "https://testnet.nearblocks.io/txns/FRntGZYPnAxrNQUvq5EFGHvwFF1JT2E7yRbq6CQS9eSM"
+  }
+]

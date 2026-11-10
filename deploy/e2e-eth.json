@@ -1,0 +1,15 @@
+[
+  {
+    "at": "2026-11-10T09:53:33.506Z",
+    "name": "ETH request (hot allowance) -> MPC sign",
+    "id": 10,
+    "hash": "Dn2GsBpmQj8ohHt7NqLUCAYo1Ho6quMDk4Rp4SGBNSCu",
+    "explorer": "https://testnet.nearblocks.io/txns/Dn2GsBpmQj8ohHt7NqLUCAYo1Ho6quMDk4Rp4SGBNSCu"
+  },
+  {
+    "at": "2026-11-10T09:53:33.688Z",
+    "name": "MPC signature verified",
+    "id": 10,
+    "note": "payload matches ethers: true; recovered sender 0x89250Ea451fE4141aE4C31584E41841f53179B74; vault address 0x89250Ea451fE4141aE4C31584E41841f53179B74; OK"
+  }
+]

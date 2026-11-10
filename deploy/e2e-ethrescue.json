@@ -1,0 +1,42 @@
+[
+  {
+    "at": "2026-11-10T09:52:57.286Z",
+    "name": "0.05 ETH request beyond allowance -> held",
+    "id": 9,
+    "hash": "741wEdH22rSynuBynkGuKTqTKWP7J15SQBAy5rWvqybz",
+    "explorer": "https://testnet.nearblocks.io/txns/741wEdH22rSynuBynkGuKTqTKWP7J15SQBAy5rWvqybz"
+  },
+  {
+    "at": "2026-11-10T09:52:59.934Z",
+    "name": "Watcher scored it",
+    "id": 9,
+    "note": "score 50"
+  },
+  {
+    "at": "2026-11-10T09:53:09.356Z",
+    "name": "Guardians g2 + g3 rescued -> MPC signs transfer to safe address",
+    "id": 9,
+    "hash": "8MQctJgKRkzzgAnYbLj1KrwpGDfWYUeFsju8PFkVE55q",
+    "explorer": "https://testnet.nearblocks.io/txns/8MQctJgKRkzzgAnYbLj1KrwpGDfWYUeFsju8PFkVE55q"
+  },
+  {
+    "at": "2026-11-10T09:53:09.694Z",
+    "name": "Rescue tx verified",
+    "id": 9,
+    "note": "to 0xf55b4654d6761e1F3EdEDD2f1c480FB4fD97911F (safe), from 0x89250Ea451fE4141aE4C31584E41841f53179B74 (vault), OK"
+  },
+  {
+    "at": "2026-11-10T09:53:11.709Z",
+    "name": "Guardian opened DAO proposal to unfreeze",
+    "hash": "FnuDNwkn4HL1hPdmJ7RAz8ozxRurs6XKZsPaus55LQuK",
+    "note": "proposal 3",
+    "explorer": "https://testnet.nearblocks.io/txns/FnuDNwkn4HL1hPdmJ7RAz8ozxRurs6XKZsPaus55LQuK"
+  },
+  {
+    "at": "2026-11-10T09:53:18.521Z",
+    "name": "DAO approved -> dao_unfreeze executed",
+    "hash": "DuG63rgTQHBPKqwqhUmtLwrnaj1LkytbKgTiJTFEBiR8",
+    "note": "frozen now false",
+    "explorer": "https://testnet.nearblocks.io/txns/DuG63rgTQHBPKqwqhUmtLwrnaj1LkytbKgTiJTFEBiR8"
+  }
+]

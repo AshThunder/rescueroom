@@ -1,0 +1,59 @@
+[
+  {
+    "at": "2026-11-10T09:52:05.358Z",
+    "name": "Attacker (stolen agent key) requested 0.5000 NEAR",
+    "id": 7,
+    "hash": "79HeRhRsm3EFTh51h1Uj6mAw8NYCis6BaFYZ31ybjePY",
+    "explorer": "https://testnet.nearblocks.io/txns/79HeRhRsm3EFTh51h1Uj6mAw8NYCis6BaFYZ31ybjePY"
+  },
+  {
+    "at": "2026-11-10T09:52:07.157Z",
+    "name": "Attacker (stolen agent key) requested 2.0000 NEAR",
+    "id": 8,
+    "hash": "Fcpn7SpxveatJWUJM8XDFnizbMEBZSq2aupcfjMawrDj",
+    "explorer": "https://testnet.nearblocks.io/txns/Fcpn7SpxveatJWUJM8XDFnizbMEBZSq2aupcfjMawrDj"
+  },
+  {
+    "at": "2026-11-10T09:52:12.258Z",
+    "name": "Watcher scored the drain",
+    "id": 8,
+    "note": "score 95, signals new_destination,chunked_drain,large_share_of_reserve,agent_unlisted_destination"
+  },
+  {
+    "at": "2026-11-10T09:52:14.378Z",
+    "name": "Guardian g1 voted rescue",
+    "hash": "GoKe6wXm6BagSGNmmPD6RN8ghYhfnQtCz7c2EAr1a9qz",
+    "explorer": "https://testnet.nearblocks.io/txns/GoKe6wXm6BagSGNmmPD6RN8ghYhfnQtCz7c2EAr1a9qz"
+  },
+  {
+    "at": "2026-11-10T09:52:17.756Z",
+    "name": "Guardian g2 voted rescue -> quorum",
+    "hash": "4Dky2XvFHa4SidgpVAs29RWADfmuWLB8MQyP44Jt61Se",
+    "explorer": "https://testnet.nearblocks.io/txns/4Dky2XvFHa4SidgpVAs29RWADfmuWLB8MQyP44Jt61Se"
+  },
+  {
+    "at": "2026-11-10T09:52:18.038Z",
+    "name": "Rescued: vault frozen, funds at safe address",
+    "note": "frozen true; safe balance 2.0433 NEAR"
+  },
+  {
+    "at": "2026-11-10T09:52:20.566Z",
+    "name": "Guardian opened DAO proposal to unfreeze",
+    "hash": "UC4HzjnxFfRzpaSzs3v62TeQud9i3ALjMsKZapXrbYT",
+    "note": "proposal 2",
+    "explorer": "https://testnet.nearblocks.io/txns/UC4HzjnxFfRzpaSzs3v62TeQud9i3ALjMsKZapXrbYT"
+  },
+  {
+    "at": "2026-11-10T09:52:27.725Z",
+    "name": "DAO approved -> dao_unfreeze executed",
+    "hash": "FFjnMy9LjCogZTF5uEGy7TAec64P1TVKLWEvwXy5MA3K",
+    "note": "frozen now false",
+    "explorer": "https://testnet.nearblocks.io/txns/FFjnMy9LjCogZTF5uEGy7TAec64P1TVKLWEvwXy5MA3K"
+  },
+  {
+    "at": "2026-11-10T09:52:30.160Z",
+    "name": "Safe address returned funds to vault for the next demo",
+    "hash": "6asjjLhFc4yft15N86dArJD16FnP27Ye5p44qL223Kx7",
+    "explorer": "https://testnet.nearblocks.io/txns/6asjjLhFc4yft15N86dArJD16FnP27Ye5p44qL223Kx7"
+  }
+]

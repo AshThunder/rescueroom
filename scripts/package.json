@@ -1,0 +1,1 @@
+{"name":"@rescueroom/scripts","private":true,"type":"module","dependencies":{"ethers":"^6.17.0","near-api-js":"^7.2.0"}}

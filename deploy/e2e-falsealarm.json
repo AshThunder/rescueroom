@@ -1,0 +1,54 @@
+[
+  {
+    "at": "2026-11-10T10:00:54.203Z",
+    "name": "New vendor account (never paid before)",
+    "note": "vendor-mwais4s0.rescueroom-j60ox4.testnet"
+  },
+  {
+    "at": "2026-11-10T10:00:56.231Z",
+    "name": "Vendor payment requested (beyond allowance)",
+    "id": 15,
+    "hash": "8qRvJyUkH49Q1RTerQybfycKUFiNTSW52Ht3e4uJYPZp",
+    "explorer": "https://testnet.nearblocks.io/txns/8qRvJyUkH49Q1RTerQybfycKUFiNTSW52Ht3e4uJYPZp"
+  },
+  {
+    "at": "2026-11-10T10:00:59.295Z",
+    "name": "Watcher flagged it",
+    "id": 15,
+    "note": "score 55, hold until 2026-11-10T10:01:55.297Z"
+  },
+  {
+    "at": "2026-11-10T10:01:01.561Z",
+    "name": "Owner cancelled own flagged request",
+    "id": 15,
+    "hash": "DYvhtayRowrYjR8NBT77jmxgV7YmFmteh6CYNma4uPAZ",
+    "explorer": "https://testnet.nearblocks.io/txns/DYvhtayRowrYjR8NBT77jmxgV7YmFmteh6CYNma4uPAZ"
+  },
+  {
+    "at": "2026-11-10T10:01:03.640Z",
+    "name": "Owner whitelisted vendor",
+    "hash": "4oNSuF7vhdGHkP6rFkdRB6BhJfSFCjeiNMci6XYB3Gzf",
+    "explorer": "https://testnet.nearblocks.io/txns/4oNSuF7vhdGHkP6rFkdRB6BhJfSFCjeiNMci6XYB3Gzf"
+  },
+  {
+    "at": "2026-11-10T10:01:05.889Z",
+    "name": "Resent payment",
+    "id": 16,
+    "hash": "8g7uyXVXsHhsMkqZVyoZYMxtfRN8sD6Ni8EzEK61DtAq",
+    "explorer": "https://testnet.nearblocks.io/txns/8g7uyXVXsHhsMkqZVyoZYMxtfRN8sD6Ni8EzEK61DtAq"
+  },
+  {
+    "at": "2026-11-10T10:01:08.666Z",
+    "name": "Watcher rescored",
+    "id": 16,
+    "note": "score 40, signals fresh_whitelist,chunked_drain"
+  },
+  {
+    "at": "2026-11-10T10:02:12.347Z",
+    "name": "Vendor paid after hold",
+    "id": 16,
+    "hash": "BBo1BSG6v5h8Vx5WcZBgxcjyt9HbPcZb7Qh4gV66rQCa",
+    "note": "Executed",
+    "explorer": "https://testnet.nearblocks.io/txns/BBo1BSG6v5h8Vx5WcZBgxcjyt9HbPcZb7Qh4gV66rQCa"
+  }
+]

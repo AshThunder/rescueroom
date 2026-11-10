@@ -1,0 +1,24 @@
+{
+  "network": "testnet",
+  "vault": "vault.rescueroom-j60ox4.testnet",
+  "owner": "owner.rescueroom-j60ox4.testnet",
+  "dao": "rescueroom-j60ox4-guardians.sputnik-v2.testnet",
+  "watcher": "watcher.rescueroom-j60ox4.testnet",
+  "relayer": "relayer.rescueroom-j60ox4.testnet",
+  "safe_near": "safe.rescueroom-j60ox4.testnet",
+  "guardians": [
+    "g1.rescueroom-j60ox4.testnet",
+    "g2.rescueroom-j60ox4.testnet",
+    "g3.rescueroom-j60ox4.testnet"
+  ],
+  "attacker": "attacker.rescueroom-j60ox4.testnet",
+  "vendor": "vendor.rescueroom-j60ox4.testnet",
+  "mpc_signer": "v1.signer-prod.testnet",
+  "evm_path": "rescueroom-eth-1",
+  "vault_sepolia_address": "0x89250Ea451fE4141aE4C31584E41841f53179B74",
+  "safe_evm": "0xf55b4654d6761e1F3EdEDD2f1c480FB4fD97911F",
+  "safe_evm_note": "MPC-derived from the guardian DAO account, path rescueroom-safe-1",
+  "legacy_vaults": [
+    "treasury.rescueroom-j60ox4.testnet"
+  ]
+}
