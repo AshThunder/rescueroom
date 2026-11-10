@@ -104,11 +104,13 @@ async function falseAlarm() {
 
 async function agentAccount() {
   const keyId = `agent-key-${V}`;
-  let pk;
-  if (!hasKey(keyId)) {
-    pk = newKey(keyId);
+  // A rescue revokes the agent key on-chain, so issue a fresh one whenever ours is no longer listed.
+  const listed = hasKey(keyId) && (await view(V, 'get_agents')).some(([pk]) => pk === loadKeyPair(keyId).getPublicKey().toString());
+  if (!listed) {
+    const pk = newKey(keyId);
     const r = await call(st.owner, V, 'add_agent_key', { public_key: pk, label: 'ops-agent' }, { deposit: 1n, gas: 100n * TGAS });
     step('Owner gave the AI agent a request-only key', { hash: r.hash });
+    await sleep(1500);
   }
   return new Account(V, provider, new KeyPairSigner(loadKeyPair(keyId)));
 }
@@ -149,10 +151,21 @@ async function ethRescue() {
 async function coverPayout() {
   // Pay out the hot-allowance loss from the most recent agent attack.
   const reqs = await view(V, 'list_requests', { from_index: 0, limit: 100 });
-  const loss = reqs.find((r) => r.hot && r.agent && r.status === 'Executed');
-  if (!loss) throw new Error('no hot agent loss to claim; run attack first');
-  const policy = (await view(V, 'list_policies')).find((x) => x.holder === st.owner && Number(x.end_ms) > Date.now() && x.paid_out === '0');
-  if (!policy) throw new Error('no unused policy');
+  const claims = await view(V, 'list_claims');
+  const loss = reqs.find((r) => r.hot && r.agent && r.status === 'Executed' && !claims.some((c) => c.request_id === r.id));
+  if (!loss) {
+    const paid = claims.filter((c) => c.status === 'Paid' || c.payout !== '0').at(-1);
+    if (!paid) throw new Error('no hot agent loss to claim; run attack first');
+    step('Cover already paid for the latest agent loss (during the attack run)', { note: `claim ${paid.id}, payout ${fmtNear(paid.payout)} NEAR` });
+    return;
+  }
+  let policy = (await view(V, 'list_policies')).find((x) => x.holder === st.owner && Number(x.end_ms) > Date.now() && x.paid_out === '0');
+  if (!policy) {
+    const quote = await view(V, 'quote_premium', { coverage: near(1).toString() });
+    const p = await call(st.owner, V, 'buy_cover', { coverage: near(1).toString() }, { deposit: BigInt(quote) });
+    step('Owner bought 1 NEAR of cover', { hash: p.hash, note: `premium ${fmtNear(quote)} NEAR` });
+    policy = { id: p.value };
+  }
   const cl = await call(st.owner, V, 'file_claim', { policy_id: policy.id, amount: loss.amount, request_id: loss.id, reason: 'Hot allowance drained by stolen agent key' });
   step(`Owner filed cover claim for ${fmtNear(loss.amount)} NEAR lost in H-${String(loss.id).padStart(4, '0')}`, { hash: cl.hash });
   const c1 = await call(st.g1, V, 'vote_claim', { claim_id: cl.value });
@@ -221,10 +234,22 @@ async function attack() {
 
 const which = process.argv[2] || 'all';
 const runs = { eth: ethSign, hot: hotSpend, falsealarm: falseAlarm, attack, cover: coverPayout, ethrescue: ethRescue };
+const write = (name, entries) => {
+  const out = path.join(ROOT, 'deploy', `e2e-${name}.json`);
+  fs.writeFileSync(out, JSON.stringify(entries.map((l) => ({ ...l, vault: V, explorer: l.hash ? explorer(l.hash) : undefined })), null, 2) + '\n');
+  return out;
+};
 try {
-  for (const [k, fn] of Object.entries(runs)) if (which === 'all' || which === k) { console.log(`\n# ${k}`); await fn(); }
+  for (const [k, fn] of Object.entries(runs)) {
+    if (which !== 'all' && which !== k) continue;
+    console.log(`\n# ${k}`);
+    const start = log.length;
+    await fn();
+    let entries = log.slice(start);
+    // In a full run the attack scenario already files and pays the claim; record those steps as the cover scenario.
+    if (k === 'cover' && entries.length === 1 && /already paid/.test(entries[0].name)) entries = log.filter((l) => /cover|claim/i.test(l.name));
+    write(k, entries);
+  }
 } finally {
-  const out = path.join(ROOT, 'deploy', `e2e-${which}.json`);
-  fs.writeFileSync(out, JSON.stringify(log.map((l) => ({ ...l, explorer: l.hash ? explorer(l.hash) : undefined })), null, 2));
-  console.log(`\nlog: ${out}`);
+  console.log(`\nlog: ${write(which, log)}`);
 }

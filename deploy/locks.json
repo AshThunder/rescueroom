@@ -1,0 +1,14 @@
+{
+  "vault-v2.rescueroom-j60ox4.testnet": {
+    "at": "2026-11-10T10:08:30Z",
+    "deleted_full_access_keys": 1,
+    "tx": "9rfXEqGQnhTbQCMS3Xde3FW8E741me7FqtySwqWJxicV",
+    "remaining_keys": 0
+  },
+  "sandbox.rescueroom-j60ox4.testnet": {
+    "at": "2026-11-10T10:19:00Z",
+    "deleted_full_access_keys": 1,
+    "tx": "56xhdwQpYtVMkBbA8hxfUC7gHZKKCQaYFa18dZR1kyZQ",
+    "remaining_keys": 0
+  }
+}

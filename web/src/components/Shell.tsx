@@ -2,6 +2,7 @@ import { createContext, useContext, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Bell, Hourglass, LayoutDashboard, ListTree, Menu, SlidersHorizontal, SquareTerminal, Umbrella, Users, X } from 'lucide-react';
 import { Mark } from './Ring';
+import { WalletButton } from './WalletButton';
 import { Boundary } from './Boundary';
 import { DEPLOY, isOpen, useVaultData, type VaultState } from '../lib/useVault';
 
@@ -82,6 +83,7 @@ export function Shell() {
             <div className="brand" style={{ padding: 0 }}><Mark />Rescue Room</div>
             <span className="grow" />
             {openCount > 0 && <span className="tag a"><span className="dot a" />{openCount} open</span>}
+            <WalletButton compact />
             <button className="btn ghost sm" aria-label={menu ? 'Close menu' : 'Open menu'} aria-expanded={menu} onClick={() => setMenu(!menu)} style={{ padding: '0 8px' }}>
               {menu ? <X className="ic lg" /> : <Menu className="ic lg" />}
             </button>
@@ -94,7 +96,8 @@ export function Shell() {
           <div className="top">
             <div className="crumb"><b>{crumb}</b></div>
             <span className="grow" />
-            <span className="small t3 mono">{DEPLOY.vault}{v.data ? ` · updated ${new Date(v.data.updatedAt).toLocaleTimeString('en-GB', { timeZone: 'Africa/Lagos' })} WAT` : ''}</span>
+            <span className="small t3 mono hide-narrow">{v.data ? `updated ${new Date(v.data.updatedAt).toLocaleTimeString('en-GB', { timeZone: 'Africa/Lagos' })} WAT` : ''}</span>
+            <WalletButton />
           </div>
           <main id="main" className="page">
             <Boundary key={loc.pathname}><Outlet /></Boundary>

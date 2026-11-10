@@ -1,0 +1,8 @@
+{
+  "network": "testnet",
+  "vault": "sandbox.rescueroom-j60ox4.testnet",
+  "safe_near": "sandbox-safe.rescueroom-j60ox4.testnet",
+  "dao": "rescueroom-j60ox4-guardians.sputnik-v2.testnet",
+  "attacker": "attacker.rescueroom-j60ox4.testnet",
+  "vault_sepolia_address": "0x958794ce6Ad30cF6F857B6AE7C9DCC2c0634EfBd"
+}

@@ -1,0 +1,11 @@
+[
+  {
+    "at": "2026-11-10T10:35:55.322Z",
+    "name": "Hot spend executed instantly",
+    "id": 9,
+    "hash": "2pF2vT2cxovnzm2PNG73AVhP8hyE51LqHDjth8gSau5N",
+    "note": "status Executed",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/2pF2vT2cxovnzm2PNG73AVhP8hyE51LqHDjth8gSau5N"
+  }
+]

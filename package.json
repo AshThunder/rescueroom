@@ -2,18 +2,28 @@
   "name": "rescueroom",
   "private": true,
   "type": "module",
-  "workspaces": ["watcher", "alerts", "attacker", "scripts"],
+  "workspaces": [
+    "watcher",
+    "alerts",
+    "attacker",
+    "scripts",
+    "server"
+  ],
   "scripts": {
-    "test": "npm run test:contract && npm run test:watcher",
+    "test": "npm run test:contract && npm run test:js",
     "test:contract": "cd contracts/vault && cargo test",
-    "test:watcher": "node --test watcher/test/rules.test.js",
     "build:contract": "cd contracts/vault && cargo near build non-reproducible-wasm",
     "deploy": "node scripts/deploy.mjs",
-    "e2e": "node scripts/e2e.mjs all",
-    "watcher": "node watcher/src/watcher.js",
-    "alerts": "node alerts/src/alerts.js",
-    "relayer": "node scripts/relayer.mjs",
+    "e2e": "node --env-file-if-exists=.env scripts/e2e.mjs all",
+    "watcher": "node --env-file-if-exists=.env watcher/src/watcher.js",
+    "alerts": "node --env-file-if-exists=.env alerts/src/alerts.js",
+    "relayer": "node --env-file-if-exists=.env scripts/relayer.mjs",
     "attacker": "node attacker/src/attacker.js",
-    "web": "cd web && npm run dev"
+    "web": "cd web && npm run dev",
+    "test:js": "node --test watcher/test/*.test.js alerts/test/*.test.js server/test/*.test.js",
+    "api": "node --env-file-if-exists=.env server/src/index.js",
+    "deploy:sandbox": "VAULT_ROLE=sandbox node scripts/deploy.mjs",
+    "lock": "node scripts/lock-vault.mjs",
+    "dao-upgrade": "node scripts/dao-upgrade.mjs"
   }
 }

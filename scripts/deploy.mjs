@@ -71,13 +71,17 @@ async function main_() {
   console.log('main balance', fmtNear(await main.getBalance()));
   for (const [p, amt] of Object.entries(ROLES)) st[p] = await ensureSub(p, amt);
   st.dao = await ensureDao();
-  const prefix = process.env.VAULT_PREFIX || 'vault';
+  // VAULT_ROLE=main (default) is the demo treasury; VAULT_ROLE=sandbox is the public attacker sandbox.
+  const role = process.env.VAULT_ROLE || 'main';
+  const sandbox = role === 'sandbox';
+  const prefix = process.env.VAULT_PREFIX || (sandbox ? 'sandbox' : 'vault');
   const vaultId = sub(prefix);
-  st.vault = vaultId;
+  const safeNear = sandbox ? await ensureSub('sandbox-safe', 0.2) : st.safe;
   const fresh = !(await exists(vaultId));
-  if (fresh) await ensureSub(prefix, 8);
+  if (fresh) { await ensureSub(prefix, 8); await new Promise((r) => setTimeout(r, 3000)); }
   const vault = account(vaultId);
-  const wasm = fs.readFileSync(path.join(ROOT, 'contracts/vault/target/near/rescueroom_vault.wasm'));
+  if (!hasKey(vaultId)) throw new Error(`${vaultId} exists but its key is not here`);
+  const wasm = fs.readFileSync(process.env.WASM || path.join(ROOT, 'contracts/vault/target/near/rescueroom_vault.wasm'));
   const state = await vault.getState();
   const deployed = state.codeHash && state.codeHash !== '11111111111111111111111111111111';
   if (!deployed || process.env.REDEPLOY) {
@@ -91,9 +95,10 @@ async function main_() {
       watcher: st.watcher,
       watcher_pk: watcherPk,
       relayer: st.relayer,
-      safe_near: st.safe,
+      safe_near: safeNear,
       safe_evm: st.safe_evm || '0x000000000000000000000000000000000000dEaD',
-      near_allowance: { limit: near(1).toString(), window_secs: 86400 },
+      // Sandbox: 0.3 NEAR per (demo) 10s window so every run shows a small hot loss.
+      near_allowance: sandbox ? { limit: near(0.3).toString(), window_secs: 600 } : { limit: near(1).toString(), window_secs: 86400 },
       eth_allowance: { limit: (2n * 10n ** 15n).toString(), window_secs: 86400 },
       hold_tiers: [
         { min_score: 0, hold_secs: 0 },
@@ -101,7 +106,8 @@ async function main_() {
         { min_score: 60, hold_secs: 10800 },
         { min_score: 80, hold_secs: 21600 },
       ],
-      hold_floor_secs: 0,
+      // Policy minimum for anything beyond the allowance. A watcher score cannot go below it.
+      hold_floor_secs: 1800,
       unscored_hold_secs: 21600,
       evm: {
         mpc_contract: 'v1.signer-prod.testnet',
@@ -127,14 +133,27 @@ async function main_() {
   const { ethers } = await import('ethers');
   const bs58 = (await import('./lib/bs58.js')).default;
   const raw = bs58.decode(pk.split(':')[1]); // 64-byte uncompressed (x||y)
-  st.vault_evm = ethers.computeAddress('0x04' + Buffer.from(raw).toString('hex'));
-  st.vault_evm_pubkey = pk;
+  const vaultEvm = ethers.computeAddress('0x04' + Buffer.from(raw).toString('hex'));
+  if (sandbox) {
+    st.sandbox = { vault: vaultId, safe: safeNear, vault_evm: vaultEvm };
+  } else {
+    if (st.vault && st.vault !== vaultId) st.legacy_vaults = [...new Set([...(st.legacy_vaults || []), st.vault])];
+    st.vault = vaultId;
+    st.vault_evm = vaultEvm;
+  }
   saveState(st);
+  if (sandbox) {
+    const out = { network: 'testnet', vault: vaultId, safe_near: safeNear, dao: st.dao, attacker: st.attacker, vault_sepolia_address: vaultEvm };
+    fs.mkdirSync(path.join(ROOT, 'deploy'), { recursive: true });
+    fs.writeFileSync(path.join(ROOT, 'deploy/sandbox.json'), JSON.stringify(out, null, 2) + '\n');
+    console.log(JSON.stringify(out, null, 2));
+    return;
+  }
   const pub = {
     network: 'testnet',
     vault: st.vault, owner: st.owner, dao: st.dao, watcher: st.watcher, relayer: st.relayer, safe_near: st.safe,
     guardians: [st.g1, st.g2, st.g3], attacker: st.attacker, vendor: st.vendor,
-    mpc_signer: 'v1.signer-prod.testnet', evm_path: cfg.evm.path, vault_sepolia_address: st.vault_evm,
+    mpc_signer: 'v1.signer-prod.testnet', evm_path: cfg.evm.path, vault_sepolia_address: vaultEvm,
     safe_evm: cfg.safe_evm,
     ...(st.safe_evm_path ? { safe_evm_note: `MPC-derived from the guardian DAO account, path ${st.safe_evm_path}` } : {}),
     ...(st.legacy_vaults ? { legacy_vaults: st.legacy_vaults } : {}),

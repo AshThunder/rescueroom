@@ -8,6 +8,9 @@ import { StatusTag, who } from '../components/vault';
 import { DEPLOY, isOpen, useNow } from '../lib/useVault';
 import { SIGNAL_LABEL, acct, amt, assetLabel, countdown, dateTime, duration, reqId, short, tierOf } from '../lib/format';
 import { etherscanTx } from '../lib/near';
+import { api, type IndexedEvent } from '../lib/api';
+import { describeEvent } from '../lib/events';
+import { ExternalLink } from 'lucide-react';
 
 interface Evidence { hash: string; bundle: { explanation: { provider: string; text: string }; model: string; signals: { code: string; weight: number; detail: string }[]; scored_at: string } }
 
@@ -109,6 +112,7 @@ export function HoldDetail() {
               </div>
             </Card>
           )}
+          <RequestEvents id={r.id} />
         </div>
 
         <div className="stack g16 first-m">
@@ -182,5 +186,35 @@ function TierScale({ score, tiers }: { score: number; tiers: number[] }) {
         {tiers.map((t, i) => <span key={t} style={{ flex: bounds[i + 1] - t }}>{t}+</span>)}
       </div>
     </div>
+  );
+}
+
+function RequestEvents({ id }: { id: number }) {
+  const [evs, setEvs] = useState<IndexedEvent[] | null>(null);
+  const [down, setDown] = useState(false);
+  useEffect(() => {
+    const load = () => api<{ events: IndexedEvent[] }>(`/events?account=${encodeURIComponent(DEPLOY.vault)}&request=${id}`).then((r) => { setEvs(r.events); setDown(false); }).catch(() => setDown(true));
+    load();
+    const t = setInterval(load, 6000);
+    return () => clearInterval(t);
+  }, [id]);
+  if (down && !evs) return null;
+  return (
+    <Card title="On-chain events" aside="NEP-297, indexed">
+      {!evs ? <div className="pad small t3">Loading…</div> : evs.length === 0 ? <Empty title="No events indexed yet">They appear a few seconds after each transaction.</Empty> : (
+        <ul className="list" style={{ listStyle: 'none' }}>
+          {evs.map((e) => {
+            const d = describeEvent(e);
+            return (
+              <li key={e.key} className="li">
+                <d.icon className={`ic ${d.tone === 'g' ? 'green' : d.tone === 'a' ? 'amber' : d.tone === 'r' ? 'red' : 't3'}`} aria-hidden />
+                <div className="grow"><div>{d.text}</div><div className="small t3 mono">{e.event} · {dateTime(e.ts_ms)}</div></div>
+                <a className="link small row gap4" style={{ display: 'inline-flex' }} href={e.explorer} target="_blank" rel="noreferrer" aria-label="Open transaction on NearBlocks"><span className="mono">{e.tx_hash.slice(0, 8)}</span><ExternalLink className="ic" style={{ width: 12, height: 12 }} aria-hidden /></a>
+              </li>
+            );
+          })}
+        </ul>
+      )}
+    </Card>
   );
 }

@@ -1,54 +1,62 @@
 [
   {
-    "at": "2026-11-10T10:00:54.203Z",
+    "at": "2026-11-10T10:35:57.340Z",
     "name": "New vendor account (never paid before)",
-    "note": "vendor-mwais4s0.rescueroom-j60ox4.testnet"
+    "note": "vendor-mwak17i2.rescueroom-j60ox4.testnet",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet"
   },
   {
-    "at": "2026-11-10T10:00:56.231Z",
+    "at": "2026-11-10T10:35:59.143Z",
     "name": "Vendor payment requested (beyond allowance)",
-    "id": 15,
-    "hash": "8qRvJyUkH49Q1RTerQybfycKUFiNTSW52Ht3e4uJYPZp",
-    "explorer": "https://testnet.nearblocks.io/txns/8qRvJyUkH49Q1RTerQybfycKUFiNTSW52Ht3e4uJYPZp"
+    "id": 10,
+    "hash": "5dA5vTdwKS7SijngSpSdo3Kf6e8KEe2L7cDUv6hmEijC",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/5dA5vTdwKS7SijngSpSdo3Kf6e8KEe2L7cDUv6hmEijC"
   },
   {
-    "at": "2026-11-10T10:00:59.295Z",
+    "at": "2026-11-10T10:36:01.746Z",
     "name": "Watcher flagged it",
-    "id": 15,
-    "note": "score 55, hold until 2026-11-10T10:01:55.297Z"
+    "id": 10,
+    "note": "score 55, hold until 2026-11-10T10:36:58.498Z",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet"
   },
   {
-    "at": "2026-11-10T10:01:01.561Z",
+    "at": "2026-11-10T10:36:04.192Z",
     "name": "Owner cancelled own flagged request",
-    "id": 15,
-    "hash": "DYvhtayRowrYjR8NBT77jmxgV7YmFmteh6CYNma4uPAZ",
-    "explorer": "https://testnet.nearblocks.io/txns/DYvhtayRowrYjR8NBT77jmxgV7YmFmteh6CYNma4uPAZ"
+    "id": 10,
+    "hash": "2gnPn7GuosAQ9zdRRUCW13XCb8uxVk5qSEj4a9ki8LzQ",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/2gnPn7GuosAQ9zdRRUCW13XCb8uxVk5qSEj4a9ki8LzQ"
   },
   {
-    "at": "2026-11-10T10:01:03.640Z",
+    "at": "2026-11-10T10:36:05.936Z",
     "name": "Owner whitelisted vendor",
-    "hash": "4oNSuF7vhdGHkP6rFkdRB6BhJfSFCjeiNMci6XYB3Gzf",
-    "explorer": "https://testnet.nearblocks.io/txns/4oNSuF7vhdGHkP6rFkdRB6BhJfSFCjeiNMci6XYB3Gzf"
+    "hash": "7aoXqN7ZULV3cy9LjTMoqjY3zToU4LVncqgw6Vyq9zpd",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/7aoXqN7ZULV3cy9LjTMoqjY3zToU4LVncqgw6Vyq9zpd"
   },
   {
-    "at": "2026-11-10T10:01:05.889Z",
+    "at": "2026-11-10T10:36:08.000Z",
     "name": "Resent payment",
-    "id": 16,
-    "hash": "8g7uyXVXsHhsMkqZVyoZYMxtfRN8sD6Ni8EzEK61DtAq",
-    "explorer": "https://testnet.nearblocks.io/txns/8g7uyXVXsHhsMkqZVyoZYMxtfRN8sD6Ni8EzEK61DtAq"
+    "id": 11,
+    "hash": "DKpmhdGiVuSVD79xCfkYrTGqTP7D427ksd1LNpGFDoiR",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/DKpmhdGiVuSVD79xCfkYrTGqTP7D427ksd1LNpGFDoiR"
   },
   {
-    "at": "2026-11-10T10:01:08.666Z",
+    "at": "2026-11-10T10:36:10.883Z",
     "name": "Watcher rescored",
-    "id": 16,
-    "note": "score 40, signals fresh_whitelist,chunked_drain"
+    "id": 11,
+    "note": "score 40, signals fresh_whitelist,chunked_drain",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet"
   },
   {
-    "at": "2026-11-10T10:02:12.347Z",
+    "at": "2026-11-10T10:37:14.326Z",
     "name": "Vendor paid after hold",
-    "id": 16,
-    "hash": "BBo1BSG6v5h8Vx5WcZBgxcjyt9HbPcZb7Qh4gV66rQCa",
+    "id": 11,
+    "hash": "8Dzr1PeSUWXJaVpHtH6k1DeSCsDcxfKhH67ewZ1sxeJ",
     "note": "Executed",
-    "explorer": "https://testnet.nearblocks.io/txns/BBo1BSG6v5h8Vx5WcZBgxcjyt9HbPcZb7Qh4gV66rQCa"
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/8Dzr1PeSUWXJaVpHtH6k1DeSCsDcxfKhH67ewZ1sxeJ"
   }
 ]

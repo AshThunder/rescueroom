@@ -396,3 +396,42 @@ fn cancel_and_execute_leave_open_set() {
     v.execute(b);
     assert!(v.list_open().is_empty());
 }
+
+#[test]
+fn hold_floor_stops_watcher_shortening_holds() {
+    let mut c = cfg();
+    c.hold_floor_secs = 1800;
+    testing_env!(ctx("deployer.testnet", 1_000).build());
+    let mut v = Vault::new(c, vec![acc("g1.testnet"), acc("g2.testnet")]);
+    testing_env!(ctx("owner.testnet", 2_000).build());
+    let id = v.request_withdraw(Asset::Near, "x.testnet".into(), U128(500 * NEAR), None);
+    // A compromised watcher scores 0 to try to release instantly.
+    score(&mut v, id, 0, 3_000);
+    let r = v.get_request(id).unwrap();
+    assert_eq!(r.release_ms.0, 2_000 + 1800 * 1000, "floor applies even at score 0");
+    testing_env!(ctx("attacker.testnet", 2_000 + 1800 * 1000 - 1).build());
+    let res = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| v.execute(id)));
+    assert!(res.is_err(), "cannot execute before the floor");
+    // Higher tiers are unaffected when above the floor.
+    assert_eq!(v.hold_secs_for(85), 6 * 3600);
+    assert_eq!(v.hold_secs_for(0), 1800);
+}
+
+#[test]
+#[should_panic(expected = "unscored hold must be >= hold floor")]
+fn floor_cannot_exceed_unscored_hold() {
+    let mut c = cfg();
+    c.hold_floor_secs = 7 * 3600;
+    testing_env!(ctx("deployer.testnet", 1_000).build());
+    Vault::new(c, vec![]);
+}
+
+#[test]
+#[should_panic(expected = "only guardian DAO")]
+fn owner_cannot_change_config() {
+    let mut v = setup();
+    testing_env!(ctx("owner.testnet", 2_000).build());
+    let mut c = cfg();
+    c.hold_floor_secs = 0;
+    v.dao_update_config(c);
+}

@@ -10,3 +10,6 @@ dist/
 deploy/state.local.json
 !.env.example
 *.tsbuildinfo
+
+# local API data (event cache, alert log)
+server/data/

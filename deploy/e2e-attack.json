@@ -1,59 +1,113 @@
 [
   {
-    "at": "2026-11-10T09:52:05.358Z",
+    "at": "2026-11-10T10:37:16.630Z",
+    "name": "Underwriter funded cover pool with 2 NEAR",
+    "hash": "5Z22u1Z8Y6uWVJ4YZn4nFi2iwHCKcvpnHSu95N7NiRoS",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/5Z22u1Z8Y6uWVJ4YZn4nFi2iwHCKcvpnHSu95N7NiRoS"
+  },
+  {
+    "at": "2026-11-10T10:37:19.045Z",
+    "name": "Owner bought 1 NEAR of cover",
+    "hash": "Cv3uG4tXuvyeQmLyVsrnwBUZoHmCS96FvTQULaVMnQTu",
+    "note": "premium 0.0268 NEAR",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/Cv3uG4tXuvyeQmLyVsrnwBUZoHmCS96FvTQULaVMnQTu"
+  },
+  {
+    "at": "2026-11-10T10:37:22.002Z",
+    "name": "Owner gave the AI agent a request-only key",
+    "hash": "EasDaZsNKvFJhJpEvbK5YRhEr46mKYwW1my1zwxeXJxx",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/EasDaZsNKvFJhJpEvbK5YRhEr46mKYwW1my1zwxeXJxx"
+  },
+  {
+    "at": "2026-11-10T10:37:26.238Z",
+    "name": "Attacker (stolen agent key) requested 0.8000 NEAR",
+    "id": 12,
+    "hash": "AVXY1cKzzGXCQnnPrnzPAuRqY8F1YWokrPLScZBqXo6S",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/AVXY1cKzzGXCQnnPrnzPAuRqY8F1YWokrPLScZBqXo6S"
+  },
+  {
+    "at": "2026-11-10T10:37:28.126Z",
     "name": "Attacker (stolen agent key) requested 0.5000 NEAR",
-    "id": 7,
-    "hash": "79HeRhRsm3EFTh51h1Uj6mAw8NYCis6BaFYZ31ybjePY",
-    "explorer": "https://testnet.nearblocks.io/txns/79HeRhRsm3EFTh51h1Uj6mAw8NYCis6BaFYZ31ybjePY"
+    "id": 13,
+    "hash": "7H6yUk3HDqdvXBR8DyanugkgxBRy6JR64JrXpKEhJjuk",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/7H6yUk3HDqdvXBR8DyanugkgxBRy6JR64JrXpKEhJjuk"
   },
   {
-    "at": "2026-11-10T09:52:07.157Z",
+    "at": "2026-11-10T10:37:29.795Z",
     "name": "Attacker (stolen agent key) requested 2.0000 NEAR",
-    "id": 8,
-    "hash": "Fcpn7SpxveatJWUJM8XDFnizbMEBZSq2aupcfjMawrDj",
-    "explorer": "https://testnet.nearblocks.io/txns/Fcpn7SpxveatJWUJM8XDFnizbMEBZSq2aupcfjMawrDj"
+    "id": 14,
+    "hash": "GbJQXoH3UbsRoTEKHJ7K4sBfbvt4jXuVmJcJDWKcyz3Z",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/GbJQXoH3UbsRoTEKHJ7K4sBfbvt4jXuVmJcJDWKcyz3Z"
   },
   {
-    "at": "2026-11-10T09:52:12.258Z",
+    "at": "2026-11-10T10:37:34.848Z",
     "name": "Watcher scored the drain",
-    "id": 8,
-    "note": "score 95, signals new_destination,chunked_drain,large_share_of_reserve,agent_unlisted_destination"
+    "id": 14,
+    "note": "score 65, signals chunked_drain,large_share_of_reserve,agent_unlisted_destination",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet"
   },
   {
-    "at": "2026-11-10T09:52:14.378Z",
+    "at": "2026-11-10T10:37:37.111Z",
     "name": "Guardian g1 voted rescue",
-    "hash": "GoKe6wXm6BagSGNmmPD6RN8ghYhfnQtCz7c2EAr1a9qz",
-    "explorer": "https://testnet.nearblocks.io/txns/GoKe6wXm6BagSGNmmPD6RN8ghYhfnQtCz7c2EAr1a9qz"
+    "hash": "GWwCmHEcasKwFr9bH5qFwT5DZiztzeBT5PHZkYvgteiy",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/GWwCmHEcasKwFr9bH5qFwT5DZiztzeBT5PHZkYvgteiy"
   },
   {
-    "at": "2026-11-10T09:52:17.756Z",
+    "at": "2026-11-10T10:37:40.635Z",
     "name": "Guardian g2 voted rescue -> quorum",
-    "hash": "4Dky2XvFHa4SidgpVAs29RWADfmuWLB8MQyP44Jt61Se",
-    "explorer": "https://testnet.nearblocks.io/txns/4Dky2XvFHa4SidgpVAs29RWADfmuWLB8MQyP44Jt61Se"
+    "hash": "G1NGv51wQ6opYR46nyWfbtTTPnvKCHUtHReaPZABJH1m",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/G1NGv51wQ6opYR46nyWfbtTTPnvKCHUtHReaPZABJH1m"
   },
   {
-    "at": "2026-11-10T09:52:18.038Z",
+    "at": "2026-11-10T10:37:40.888Z",
     "name": "Rescued: vault frozen, funds at safe address",
-    "note": "frozen true; safe balance 2.0433 NEAR"
+    "note": "frozen true; safe balance 2.7874 NEAR",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet"
   },
   {
-    "at": "2026-11-10T09:52:20.566Z",
+    "at": "2026-11-10T10:37:43.101Z",
+    "name": "Owner filed cover claim",
+    "hash": "BpkLrLjSQfsQkX2tVmqmbvqBJro4MXrtFSva83kGBNQm",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/BpkLrLjSQfsQkX2tVmqmbvqBJro4MXrtFSva83kGBNQm"
+  },
+  {
+    "at": "2026-11-10T10:37:48.140Z",
+    "name": "Guardians approved -> cover paid",
+    "hash": "6ZpaeM5HvEdmYkbEwovEWoRVdTPEcPBJMHFzAgVDJson",
+    "note": "payout 0.8000 NEAR; solvency 61220 bps",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/6ZpaeM5HvEdmYkbEwovEWoRVdTPEcPBJMHFzAgVDJson"
+  },
+  {
+    "at": "2026-11-10T10:37:50.302Z",
     "name": "Guardian opened DAO proposal to unfreeze",
-    "hash": "UC4HzjnxFfRzpaSzs3v62TeQud9i3ALjMsKZapXrbYT",
-    "note": "proposal 2",
-    "explorer": "https://testnet.nearblocks.io/txns/UC4HzjnxFfRzpaSzs3v62TeQud9i3ALjMsKZapXrbYT"
+    "hash": "HMe1M3aYa5nE6fsFu8M3453hmn263QXM2dTLy3NkZqXi",
+    "note": "proposal 12",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/HMe1M3aYa5nE6fsFu8M3453hmn263QXM2dTLy3NkZqXi"
   },
   {
-    "at": "2026-11-10T09:52:27.725Z",
+    "at": "2026-11-10T10:37:56.755Z",
     "name": "DAO approved -> dao_unfreeze executed",
-    "hash": "FFjnMy9LjCogZTF5uEGy7TAec64P1TVKLWEvwXy5MA3K",
+    "hash": "54APhGzJXjba2CLBXuARZBRS3t8wAmZcdAqwkounUFnB",
     "note": "frozen now false",
-    "explorer": "https://testnet.nearblocks.io/txns/FFjnMy9LjCogZTF5uEGy7TAec64P1TVKLWEvwXy5MA3K"
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/54APhGzJXjba2CLBXuARZBRS3t8wAmZcdAqwkounUFnB"
   },
   {
-    "at": "2026-11-10T09:52:30.160Z",
+    "at": "2026-11-10T10:37:59.017Z",
     "name": "Safe address returned funds to vault for the next demo",
-    "hash": "6asjjLhFc4yft15N86dArJD16FnP27Ye5p44qL223Kx7",
-    "explorer": "https://testnet.nearblocks.io/txns/6asjjLhFc4yft15N86dArJD16FnP27Ye5p44qL223Kx7"
+    "hash": "Ekpydu6hCFxukd3MnhJG7a3J8mo3yxZyiHrbNaxKYSFX",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/Ekpydu6hCFxukd3MnhJG7a3J8mo3yxZyiHrbNaxKYSFX"
   }
 ]

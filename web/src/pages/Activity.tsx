@@ -1,52 +1,88 @@
+import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Ban, CircleCheck, Fingerprint, Hourglass, LifeBuoy, Send, Zap } from 'lucide-react';
+import { ExternalLink, RefreshCw } from 'lucide-react';
 import { useVault } from '../components/Shell';
-import { Card, Empty, ErrorState, LoadingCards, Tag } from '../components/ui';
-import type { Request } from '../lib/types';
-import { amt, dateTime, reqId } from '../lib/format';
+import { Card, Empty, ErrorState, Skeleton, Tag } from '../components/ui';
+import { api, type IndexedEvent } from '../lib/api';
+import { describeEvent, type Group } from '../lib/events';
+import { acct, dateTime, reqId } from '../lib/format';
+import { DEPLOY } from '../lib/useVault';
 
-interface Ev { at: number; icon: typeof Zap; text: React.ReactNode; tag?: React.ReactNode; r: Request }
-
-function events(r: Request): Ev[] {
-  const out: Ev[] = [];
-  const base = `${amt(r.asset, r.amount)} to ${r.to}`;
-  out.push({ at: Number(r.created_ms), icon: r.hot ? Zap : Hourglass, r, text: <>{r.hot ? 'Hot spend' : 'Held request'}: {base}</>, tag: r.hot ? <Tag>hot</Tag> : <Tag tone="a">held</Tag> });
-  if (r.score) out.push({ at: Number(r.score.scored_at_ms), icon: Fingerprint, r, text: <>Watcher scored {reqId(r.id)} with signed evidence</>, tag: <Tag tone={r.score.score >= 60 ? 'a' : undefined}>risk {r.score.score}</Tag> });
-  for (const g of r.approvals) out.push({ at: Number(r.score?.scored_at_ms || r.created_ms) + 1, icon: LifeBuoy, r, text: <>{g} voted to rescue {reqId(r.id)}</> });
-  if (r.status === 'Cancelled') out.push({ at: Number(r.release_ms) + 2, icon: Ban, r, text: <>Owner cancelled {reqId(r.id)}</> });
-  if (r.status === 'Rescued') out.push({ at: Number(r.created_ms) + 3, icon: LifeBuoy, r, text: <>Rescued {reqId(r.id)}: funds moved to the safe address</>, tag: <Tag tone="g">rescued</Tag> });
-  if (r.status === 'Executed' && !r.hot) out.push({ at: Number(r.release_ms), icon: CircleCheck, r, text: <>Released {reqId(r.id)} after its hold</> });
-  if (r.signature) out.push({ at: Number(r.created_ms) + 4, icon: Send, r, text: <>MPC signed Sepolia tx for {reqId(r.id)}</> });
-  return out;
-}
+const FILTERS: { key: Group | 'all'; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'requests', label: 'Requests' },
+  { key: 'guardians', label: 'Guardians' },
+  { key: 'cover', label: 'Cover' },
+  { key: 'admin', label: 'Admin' },
+];
 
 export function Activity() {
-  const { data, error, loading, refresh } = useVault();
-  if (loading && !data) return <LoadingCards n={1} />;
-  if (!data) return <Card><ErrorState error={error || 'unknown'} onRetry={refresh} /></Card>;
-  const evs = data.requests.flatMap(events).sort((a, b) => b.at - a.at);
+  useVault();
+  const [events, setEvents] = useState<IndexedEvent[] | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+  const [sync, setSync] = useState<number | null>(null);
+  const [f, setF] = useState<Group | 'all'>('all');
+  const load = useCallback(() => {
+    api<{ events: IndexedEvent[]; last_sync: number }>(`/events?account=${encodeURIComponent(DEPLOY.vault)}&limit=500`)
+      .then((r) => {
+        setEvents(r.events);
+        setSync(r.last_sync);
+        setErr(null);
+      })
+      .catch((e) => setErr(e.message));
+  }, []);
+  useEffect(() => {
+    load();
+    const t = setInterval(load, 6000);
+    return () => clearInterval(t);
+  }, [load]);
+  const rows = (events || []).map((e) => ({ e, d: describeEvent(e) })).filter((x) => f === 'all' || x.d.group === f);
   return (
     <>
       <div className="phead">
         <div>
           <h1 className="ptitle">Audit log</h1>
-          <p className="psub">Every request, score, vote, cancel and rescue is also emitted on-chain as a NEP-297 event (<span className="mono">standard: rescueroom</span>).</p>
+          <p className="psub">NEP-297 events emitted by <span className="mono">{DEPLOY.vault}</span> (<span className="mono">standard: rescueroom</span>), indexed from NEAR testnet.</p>
+        </div>
+        <div className="seg" role="group" aria-label="Filter events">
+          {FILTERS.map((x) => <button key={x.key} aria-pressed={f === x.key} onClick={() => setF(x.key)}>{x.label}</button>)}
         </div>
       </div>
-      <Card className="mt24" title="Timeline" aside="Reconstructed from contract state; event indexer next phase">
-        {evs.length === 0 ? <Empty title="No activity yet" /> : (
-          <ul className="list" style={{ listStyle: 'none' }}>
-            {evs.map((e, i) => (
-              <li key={i} className="li">
-                <span className="mono small t3" style={{ width: 120, flex: 'none' }}>{dateTime(e.at).replace(' WAT', '')}</span>
-                <e.icon className="ic t3" aria-hidden />
-                <Link to={`/app/holds/${e.r.id}`} className="grow ellip">{e.text}</Link>
-                {e.tag}
-              </li>
-            ))}
-          </ul>
+      <Card className="mt24" title="Events" aside={<>{sync ? <>synced {dateTime(sync)}</> : null}<button className="btn ghost sm" onClick={load} aria-label="Refresh events"><RefreshCw className="ic" /></button></>}>
+        {err && !events ? (
+          <ErrorState error={`Event indexer unavailable (${err}). Start it with: npm run api`} onRetry={load} />
+        ) : !events ? (
+          <div className="pad stack g12" aria-busy="true">{[0, 1, 2, 3].map((i) => <Skeleton key={i} h={20} />)}</div>
+        ) : rows.length === 0 ? (
+          <Empty title="No events yet">{f === 'all' ? 'Contract events appear here a few seconds after each transaction.' : 'Nothing in this group yet.'}</Empty>
+        ) : (
+          <div className="tblwrap">
+            <table className="tbl resp">
+              <thead><tr><th>Event</th><th>Signed by</th><th>Time (WAT)</th><th className="num c-opt">Block</th><th className="r">Explorer</th></tr></thead>
+              <tbody>
+                {rows.map(({ e, d }) => (
+                  <tr key={e.key}>
+                    <td className="c-main">
+                      <div className="row gap8" style={{ alignItems: 'flex-start' }}>
+                        <d.icon className={`ic ${d.tone === 'g' ? 'green' : d.tone === 'a' ? 'amber' : d.tone === 'r' ? 'red' : 't3'}`} style={{ marginTop: 2 }} aria-hidden />
+                        <div className="grow">
+                          <div>{d.text}</div>
+                          <span className="sub mono">{e.event}{d.requestId !== undefined ? <> · <Link className="link" to={`/app/holds/${d.requestId}`}>{reqId(d.requestId)}</Link></> : null}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="mono small t2 c-meta nowrap" data-label="By" title={e.signer}>{acct(e.signer)}</td>
+                    <td className="small t3 nowrap c-meta">{dateTime(e.ts_ms)}</td>
+                    <td className="num small t3 c-meta c-opt" data-label="Block">{e.block_height.toLocaleString('en-US')}</td>
+                    <td className="r c-aside"><a className="link small row gap4" style={{ justifyContent: 'flex-end', display: 'inline-flex' }} href={e.explorer} target="_blank" rel="noreferrer" aria-label={`Open transaction ${e.tx_hash} on NearBlocks`}><span className="mono">{e.tx_hash.slice(0, 8)}</span><ExternalLink className="ic" style={{ width: 12, height: 12 }} aria-hidden /></a></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </Card>
+      <p className="small t3 mt16">Source: FastNEAR transactions API (free, testnet), cached by the local API. {events ? <Tag>{events.length} events</Tag> : null}</p>
     </>
   );
 }

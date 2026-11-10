@@ -24,6 +24,10 @@ use near_sdk::{
 pub mod evm;
 
 const EVENT_STANDARD: &str = "rescueroom";
+const VERSION: &str = match option_env!("RR_VERSION") {
+    Some(v) => v,
+    None => "1.1.1",
+};
 const EVENT_VERSION: &str = "1.0.0";
 const MS: u64 = 1_000;
 const NEAR_BUFFER: u128 = 500_000_000_000_000_000_000_000; // 0.5 NEAR kept for gas/storage
@@ -392,6 +396,7 @@ impl Vault {
         }
         require!(evm::parse_address(&c.safe_evm).is_some(), "bad safe_evm");
         require!(c.demo_time_divisor >= 1, "divisor >= 1");
+        require!(c.unscored_hold_secs >= c.hold_floor_secs, "unscored hold must be >= hold floor");
     }
 
     // ------------------------------------------------------------ requests
@@ -769,6 +774,20 @@ impl Vault {
     }
 
     // ------------------------------------------------------------ views
+
+    /// Contract version (set at build time with RR_VERSION).
+    pub fn version(&self) -> &'static str {
+        VERSION
+    }
+
+    /// Called by the new code after a DAO-driven upgrade. State layout is unchanged in v1.x.
+    #[private]
+    #[init(ignore_state)]
+    pub fn migrate() -> Self {
+        let s: Self = env::state_read().unwrap_or_else(|| env::panic_str("no state to migrate"));
+        emit("upgraded", json!({ "version": VERSION }));
+        s
+    }
 
     pub fn get_config(&self) -> &Config {
         &self.config
@@ -1158,6 +1177,23 @@ impl Vault {
             .transfer(NearToken::from_yoctonear(payout))
             .then(ext_self::ext(env::current_account_id()).with_static_gas(Gas::from_tgas(8)).on_claim_paid(claim_id));
     }
+}
+
+/// Upgrade entry point for Sputnik's `UpgradeRemote` proposal: the DAO calls this with the
+/// new wasm as raw input. Only the guardian DAO may call it. Once the vault's own
+/// full-access key is deleted, this is the only way to change the code.
+#[cfg(target_arch = "wasm32")]
+#[no_mangle]
+pub extern "C" fn upgrade() {
+    env::setup_panic_hook();
+    let state: Vault = env::state_read().unwrap_or_else(|| env::panic_str("no state"));
+    require!(env::predecessor_account_id() == state.config.guardian_dao, "only guardian DAO");
+    let code = env::input().unwrap_or_else(|| env::panic_str("no code"));
+    require!(code.len() > 1024, "code too small");
+    emit("upgrade_started", json!({ "code_sha256": hex::encode(env::sha256(&code)), "by": env::predecessor_account_id() }));
+    let _ = Promise::new(env::current_account_id())
+        .deploy_contract(code)
+        .function_call("migrate".to_string(), b"{}".to_vec(), NearToken::from_yoctonear(0), Gas::from_tgas(30));
 }
 
 #[cfg(test)]

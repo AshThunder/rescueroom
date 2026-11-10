@@ -21,14 +21,14 @@ export function Guardians() {
       <div className="split wide mt24">
         <Card title="Council" aside={<span className="mono">{s.guardians.length} members</span>}>
           <div className="tblwrap">
-            <table className="tbl">
-              <thead><tr><th>Account</th><th className="r">Votes cast</th><th className="r">Role</th></tr></thead>
+            <table className="tbl resp">
+              <thead><tr><th>Account</th><th className="num">Votes cast</th><th className="r">Role</th></tr></thead>
               <tbody>
                 {s.guardians.map((g) => (
                   <tr key={g}>
-                    <td><div className="row gap12"><span className="avatar" aria-hidden>{g.slice(0, 2).toUpperCase()}</span><ExtLink href={nearblocksAcct(g)}><span className="mono small">{g}</span></ExtLink></div></td>
-                    <td className="r mono">{votes(g)}</td>
-                    <td className="r"><Tag>{c.guardian_role}</Tag></td>
+                    <td className="c-main"><div className="row gap12"><span className="avatar" aria-hidden>{g.slice(0, 2).toUpperCase()}</span><ExtLink href={nearblocksAcct(g)}><span className="mono small">{g}</span></ExtLink></div></td>
+                    <td className="num c-meta" data-label="Votes cast">{votes(g)}</td>
+                    <td className="r c-aside"><Tag>{c.guardian_role}</Tag></td>
                   </tr>
                 ))}
               </tbody>

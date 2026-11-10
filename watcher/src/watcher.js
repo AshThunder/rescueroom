@@ -24,8 +24,8 @@ export function scoreMessage(vault, id, score, confidence, hash) {
   return `rescueroom-score:v1:${vault}:${id}:${score}:${confidence}:${hash}`;
 }
 
-async function context() {
-  const [cfg, status, wl] = await Promise.all([view(VAULT, 'get_config'), view(VAULT, 'get_status'), view(VAULT, 'get_whitelist')]);
+async function context(vault) {
+  const [cfg, status, wl] = await Promise.all([view(vault, 'get_config'), view(vault, 'get_status'), view(vault, 'get_whitelist')]);
   const div = cfg.demo_time_divisor;
   return {
     cfg,
@@ -41,9 +41,10 @@ async function context() {
   };
 }
 
-export async function scoreOne(req, history) {
-  const { ctx } = await context();
-  if (req.asset !== 'Near') ctx.allowance = BigInt((await view(VAULT, 'get_config')).eth_allowance.limit);
+export async function scoreOne(req, history, vault = VAULT) {
+  const VAULT = vault;
+  const { ctx, cfg } = await context(vault);
+  if (req.asset !== 'Near') ctx.allowance = BigInt(cfg.eth_allowance.limit);
   const result = scoreRequest(req, history, ctx);
   const explanation = await explain({ req, result });
   const bundle = {
@@ -73,13 +74,13 @@ export async function scoreOne(req, history) {
   return { result, hash, bundle };
 }
 
-export async function tick() {
-  const reqs = await view(VAULT, 'list_requests', { from_index: 0, limit: 100 });
+export async function tick(vault = VAULT) {
+  const reqs = await view(vault, 'list_requests', { from_index: 0, limit: 100 });
   const history = [...reqs].reverse();
   for (const r of history) {
     if (r.status === 'PendingScore' && !r.score) {
       try {
-        await scoreOne(r, history);
+        await scoreOne(r, history, vault);
       } catch (e) {
         console.error(`score #${r.id} failed:`, e.message);
       }

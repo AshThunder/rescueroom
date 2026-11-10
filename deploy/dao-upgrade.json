@@ -1,0 +1,15 @@
+{
+  "at": "2026-11-10T10:11:02.468Z",
+  "vault": "vault-v2.rescueroom-j60ox4.testnet",
+  "from": "1.1.0",
+  "to": "1.1.1",
+  "mode": "inline",
+  "code_hash": "2W9XSLGi34btWs2ryM41kWE2x8uMoAGdFivM989ociA6",
+  "proposal": 7,
+  "txs": {
+    "store_blob": null,
+    "add_proposal": "GQcResnsjVxe3i3SJ2hWy3DwqA8PL95HkeUJNh1qyGpT",
+    "approve_execute": "4q2TYvmy6orAuEsbLMSo4fE7EJwnj9g9SLrbGckyJ1VJ",
+    "remove_blob": null
+  }
+}

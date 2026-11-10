@@ -18,9 +18,13 @@ import { Activity } from './pages/Activity';
 import { Alerts } from './pages/Alerts';
 import { Attack } from './pages/Attack';
 import { Sign } from './pages/Sign';
+import { ToastProvider } from './components/Toast';
+import { WalletProvider } from './lib/wallet';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
+    <ToastProvider>
+    <WalletProvider>
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
@@ -39,5 +43,7 @@ createRoot(document.getElementById('root')!).render(
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
+    </WalletProvider>
+    </ToastProvider>
   </StrictMode>,
 );

@@ -20,5 +20,13 @@ const evidence = () => ({
 export default defineConfig({
   plugins: [react(), evidence()],
   resolve: { alias: { '@deploy': path.resolve(__dirname, '../deploy') } },
-  server: { fs: { allow: ['..'] } },
+  // near-api-js pieces inside the wallet selector expect Node's `global`.
+  define: { global: 'globalThis' },
+  server: {
+    fs: { allow: ['..'] },
+    // Local API (indexer, alerts, attacker sandbox): npm run api
+    proxy: { '/api': { target: process.env.RR_API || 'http://127.0.0.1:8787', changeOrigin: false } },
+  },
+  preview: { proxy: { '/api': { target: process.env.RR_API || 'http://127.0.0.1:8787' } } },
+  build: { chunkSizeWarningLimit: 1500 },
 });

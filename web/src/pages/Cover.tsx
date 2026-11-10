@@ -68,20 +68,20 @@ export function Cover() {
         <div className="stack g16">
           <Card title="Policies">
             {policies.length === 0 ? <Empty title="No policies yet" /> : (
-              <div className="tblwrap"><table className="tbl">
-                <thead><tr><th>#</th><th>Holder</th><th className="r">Coverage</th><th className="r">Premium</th><th className="r">Paid out</th><th>Ends</th></tr></thead>
+              <div className="tblwrap"><table className="tbl resp">
+                <thead><tr><th>Policy</th><th className="num">Coverage</th><th className="num">Premium</th><th className="num">Paid out</th><th>Ends (WAT)</th></tr></thead>
                 <tbody>{policies.map((p) => (
-                  <tr key={p.id}><td className="mono t3">{p.id}</td><td className="mono small nowrap" title={p.holder}>{acct(p.holder)}</td><td className="r mono">{nearAmt(p.coverage)}</td><td className="r mono">{nearAmt(p.premium, 4)}</td><td className="r mono">{nearAmt(p.paid_out)}</td><td className="small t3 nowrap">{dateTime(p.end_ms)}</td></tr>
+                  <tr key={p.id}><td className="c-main"><span className="mono t3">#{p.id}</span> <span className="mono small" title={p.holder}>{acct(p.holder)}</span></td><td className="num c-aside">{nearAmt(p.coverage)} NEAR</td><td className="num c-meta" data-label="Premium">{nearAmt(p.premium, 4)}</td><td className="num c-meta" data-label="Paid">{nearAmt(p.paid_out)}</td><td className="small t3 nowrap c-meta">{dateTime(p.end_ms)}</td></tr>
                 ))}</tbody>
               </table></div>
             )}
           </Card>
-          <Card title="Claims">
+          <Card title="Claims" aside={<Link className="link" to="/app/sign/fileclaim/new">File a claim</Link>}>
             {claims.length === 0 ? <Empty title="No claims">Claims are approved by the same guardian quorum, then paid from the pool.</Empty> : (
-              <div className="tblwrap"><table className="tbl">
-                <thead><tr><th>#</th><th>Reason</th><th className="r">Asked</th><th className="r">Paid</th><th className="r">Status</th></tr></thead>
+              <div className="tblwrap"><table className="tbl resp">
+                <thead><tr><th>Claim</th><th className="num">Asked</th><th className="num">Paid</th><th className="r">Status</th></tr></thead>
                 <tbody>{claims.map((c) => (
-                  <tr key={c.id}><td className="mono t3">{c.id}</td><td className="small">{c.reason}</td><td className="r mono">{nearAmt(c.amount)}</td><td className="r mono">{nearAmt(c.payout)}</td><td className="r"><Tag tone={c.status === 'Paid' ? 'g' : c.status === 'Rejected' ? 'r' : 'a'}>{c.status}</Tag></td></tr>
+                  <tr key={c.id}><td className="c-main"><span className="mono t3">#{c.id}</span> <span className="small">{c.reason}</span></td><td className="num c-aside">{nearAmt(c.amount)} NEAR</td><td className="num c-meta" data-label="Paid">{nearAmt(c.payout)}</td><td className="r c-tags"><div className="cell-tags">{c.status === 'Pending' ? <Link className="btn sm" to={`/app/sign/claim/${c.id}`}>Review</Link> : null}<Tag tone={c.status === 'Paid' ? 'g' : c.status === 'Rejected' ? 'r' : 'a'}>{c.status}</Tag></div></td></tr>
                 ))}</tbody>
               </table></div>
             )}

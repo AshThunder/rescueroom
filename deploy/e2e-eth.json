@@ -1,15 +1,17 @@
 [
   {
-    "at": "2026-11-10T09:53:33.506Z",
+    "at": "2026-11-10T10:35:51.530Z",
     "name": "ETH request (hot allowance) -> MPC sign",
-    "id": 10,
-    "hash": "Dn2GsBpmQj8ohHt7NqLUCAYo1Ho6quMDk4Rp4SGBNSCu",
-    "explorer": "https://testnet.nearblocks.io/txns/Dn2GsBpmQj8ohHt7NqLUCAYo1Ho6quMDk4Rp4SGBNSCu"
+    "id": 8,
+    "hash": "7oqq2LsVbLYJijCfm9bcaB9q2omQ71yYDnykD2KN6Y5u",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/7oqq2LsVbLYJijCfm9bcaB9q2omQ71yYDnykD2KN6Y5u"
   },
   {
-    "at": "2026-11-10T09:53:33.688Z",
+    "at": "2026-11-10T10:35:51.694Z",
     "name": "MPC signature verified",
-    "id": 10,
-    "note": "payload matches ethers: true; recovered sender 0x89250Ea451fE4141aE4C31584E41841f53179B74; vault address 0x89250Ea451fE4141aE4C31584E41841f53179B74; OK"
+    "id": 8,
+    "note": "payload matches ethers: true; recovered sender 0xFAF0Db5471b9DfD6876D349CBcAe33a6985ED31f; vault address 0xFAF0Db5471b9DfD6876D349CBcAe33a6985ED31f; OK",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet"
   }
 ]

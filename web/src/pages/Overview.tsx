@@ -1,11 +1,11 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, Lock, Plus, ShieldAlert, SlidersHorizontal, Zap } from 'lucide-react';
+import { ArrowRight, Lock, Plus, ShieldAlert, SlidersHorizontal, SquareTerminal, Wallet, Zap } from 'lucide-react';
 import { useVault } from '../components/Shell';
 import { Bar, Card, Empty, ErrorState, LoadingCards, Tag } from '../components/ui';
 import { Ring } from '../components/Ring';
 import { RiskTag, StatusTag, describe, who } from '../components/vault';
 import { DEPLOY, isOpen, useNow } from '../lib/useVault';
-import { countdown, duration, ethAmt, nearAmt, reqId, short, time } from '../lib/format';
+import { acct, amt, countdown, duration, ethAmt, nearAmt, reqId, short, time } from '../lib/format';
 
 export function Overview() {
   const { data, error, loading, refresh } = useVault();
@@ -35,6 +35,7 @@ export function Overview() {
           </div>
         </div>
       )}
+      {requests.length === 0 && <FirstRun />}
       {top && (
         <div className="banner a mt24">
           <Ring size={56} ticks={36} marker={false} frac={progress(top, now)} />
@@ -96,14 +97,15 @@ export function Overview() {
             <Empty title="No requests yet">Withdrawals made through the vault appear here.</Empty>
           ) : (
             <div className="tblwrap">
-              <table className="tbl">
-                <thead><tr><th>WAT</th><th>Request</th><th className="r">Status</th></tr></thead>
+              <table className="tbl resp">
+                <thead><tr><th>Request</th><th className="num">Amount</th><th className="r">Risk and status</th><th>Created (WAT)</th></tr></thead>
                 <tbody>
                   {requests.slice(0, 10).map((r) => (
-                    <tr key={r.id} className="click" onClick={() => nav(`/app/holds/${r.id}`)}>
-                      <td className="mono t3 nowrap">{time(r.created_ms)}</td>
-                      <td><div className="row gap8"><span className="mono t3 nowrap">{reqId(r.id)}</span><span className="ellip">{describe(r)}</span></div><div className="small t3">{who(r)}</div></td>
-                      <td className="r"><div className="row gap8" style={{ justifyContent: 'flex-end' }}><RiskTag r={r} /><StatusTag r={r} /></div></td>
+                    <tr key={r.id} className="click" tabIndex={0} aria-label={`${reqId(r.id)}: ${describe(r)}, ${r.status}`} onClick={() => nav(`/app/holds/${r.id}`)} onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && (e.preventDefault(), nav(`/app/holds/${r.id}`))}>
+                      <td className="c-main"><span className="mono t3">{reqId(r.id)}</span> <span>to {r.asset === 'Near' ? acct(r.to) : short(r.to, 6, 4)}</span><span className="sub ellip">{who(r)}</span></td>
+                      <td className="num c-aside">{amt(r.asset, r.amount)}</td>
+                      <td className="r c-tags"><div className="cell-tags"><RiskTag r={r} /><StatusTag r={r} /></div></td>
+                      <td className="mono t3 nowrap c-meta">{time(r.created_ms)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -129,6 +131,18 @@ export function Overview() {
         </Card>
       </div>
     </>
+  );
+}
+
+function FirstRun() {
+  return (
+    <Card className="mt24" title="Get started" aside="New vault">
+      <ol className="steps pad">
+        <li><span className="n">01</span><span className="h3">Connect a wallet</span><span className="small t2">The owner, a guardian or anyone can connect MyNearWallet, Meteor or HERE on testnet.</span><Link className="link small" to="/app/sign/request/new"><Wallet className="ic" style={{ width: 12, height: 12, verticalAlign: -1 }} /> Open signing page</Link></li>
+        <li><span className="n">02</span><span className="h3">Make a first withdrawal</span><span className="small t2">Small amounts pay instantly from the hot allowance. Anything larger is scored and held.</span><Link className="link small" to="/app/sign/request/new">New withdrawal</Link></li>
+        <li><span className="n">03</span><span className="h3">Try to drain it</span><span className="small t2">Run the scripted attacker against the sandbox vault and watch the guardians rescue the reserve.</span><Link className="link small" to="/app/attack"><SquareTerminal className="ic" style={{ width: 12, height: 12, verticalAlign: -1 }} /> Run attacker</Link></li>
+      </ol>
+    </Card>
   );
 }
 

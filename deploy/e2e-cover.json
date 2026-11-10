@@ -1,21 +1,38 @@
 [
   {
-    "at": "2026-11-10T09:52:47.584Z",
-    "name": "Owner filed cover claim for 0.8000 NEAR lost in H-0004",
-    "hash": "GcXoYzXjffi3oAfSyiiZFMZZ2nMeKz6wo7RgLoZecoA2",
-    "explorer": "https://testnet.nearblocks.io/txns/GcXoYzXjffi3oAfSyiiZFMZZ2nMeKz6wo7RgLoZecoA2"
+    "at": "2026-11-10T10:37:16.630Z",
+    "name": "Underwriter funded cover pool with 2 NEAR",
+    "hash": "5Z22u1Z8Y6uWVJ4YZn4nFi2iwHCKcvpnHSu95N7NiRoS",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/5Z22u1Z8Y6uWVJ4YZn4nFi2iwHCKcvpnHSu95N7NiRoS"
   },
   {
-    "at": "2026-11-10T09:52:49.355Z",
-    "name": "Guardian g1 approved claim",
-    "hash": "EA1DvMk3LfrPMzuSxh35bgaMSACTUh26khQbHAfsLyEy",
-    "explorer": "https://testnet.nearblocks.io/txns/EA1DvMk3LfrPMzuSxh35bgaMSACTUh26khQbHAfsLyEy"
+    "at": "2026-11-10T10:37:19.045Z",
+    "name": "Owner bought 1 NEAR of cover",
+    "hash": "Cv3uG4tXuvyeQmLyVsrnwBUZoHmCS96FvTQULaVMnQTu",
+    "note": "premium 0.0268 NEAR",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/Cv3uG4tXuvyeQmLyVsrnwBUZoHmCS96FvTQULaVMnQTu"
   },
   {
-    "at": "2026-11-10T09:52:54.784Z",
-    "name": "Guardian g3 approved -> cover paid",
-    "hash": "FRntGZYPnAxrNQUvq5EFGHvwFF1JT2E7yRbq6CQS9eSM",
-    "note": "payout 0.8000 NEAR (cap 1.0000); pool 1.2220 NEAR; solvency 611%",
-    "explorer": "https://testnet.nearblocks.io/txns/FRntGZYPnAxrNQUvq5EFGHvwFF1JT2E7yRbq6CQS9eSM"
+    "at": "2026-11-10T10:37:43.101Z",
+    "name": "Owner filed cover claim",
+    "hash": "BpkLrLjSQfsQkX2tVmqmbvqBJro4MXrtFSva83kGBNQm",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/BpkLrLjSQfsQkX2tVmqmbvqBJro4MXrtFSva83kGBNQm"
+  },
+  {
+    "at": "2026-11-10T10:37:48.140Z",
+    "name": "Guardians approved -> cover paid",
+    "hash": "6ZpaeM5HvEdmYkbEwovEWoRVdTPEcPBJMHFzAgVDJson",
+    "note": "payout 0.8000 NEAR; solvency 61220 bps",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet",
+    "explorer": "https://testnet.nearblocks.io/txns/6ZpaeM5HvEdmYkbEwovEWoRVdTPEcPBJMHFzAgVDJson"
+  },
+  {
+    "at": "2026-11-10T10:37:59.282Z",
+    "name": "Cover already paid for the latest agent loss (during the attack run)",
+    "note": "claim 1, payout 0.8000 NEAR",
+    "vault": "vault-v2.rescueroom-j60ox4.testnet"
   }
 ]
