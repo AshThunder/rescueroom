@@ -28,3 +28,12 @@ export function finalize(evmTx, sig) {
   tx.signature = ethers.Signature.from({ r, s, v: 27 + Number(sig.recovery_id) });
   return { tx, from: tx.from, raw: tx.serialized, payloadMatches };
 }
+
+/** The vault's Sepolia address, derived from the MPC signer (same derivation as deploy.mjs). */
+export async function deriveVaultEvm(view, vaultId) {
+  const cfg = await view(vaultId, 'get_config');
+  const pk = await view(cfg.evm.mpc_contract, 'derived_public_key', { path: cfg.evm.path, predecessor: vaultId, domain_id: 0 });
+  const bs58 = (await import('./bs58.js')).default;
+  const raw = bs58.decode(pk.split(':')[1]);
+  return ethers.computeAddress('0x04' + Buffer.from(raw).toString('hex'));
+}

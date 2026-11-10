@@ -435,3 +435,36 @@ fn owner_cannot_change_config() {
     c.hold_floor_secs = 0;
     v.dao_update_config(c);
 }
+
+#[test]
+fn dao_can_rewind_evm_nonce_and_supersede_stuck_txs() {
+    let mut v = setup();
+    testing_env!(ctx("owner.testnet", 2_000).build());
+    let a = v.request_withdraw(Asset::SepoliaEth, "0x1111111111111111111111111111111111111111".into(), U128(1_000_000_000_000_000), None);
+    let b = v.request_withdraw(Asset::SepoliaEth, "0x1111111111111111111111111111111111111111".into(), U128(500_000_000_000_000), None);
+    assert_eq!(v.get_status().evm_nonce, 2);
+    testing_env!(ctx("dao.sputnik-v2.testnet", 3_000).build());
+    v.dao_resync_evm_nonce(1);
+    assert_eq!(v.get_status().evm_nonce, 1);
+    assert_eq!(v.get_request(a).unwrap().broadcast_hash, None, "nonce below the rewind point is kept");
+    assert_eq!(v.get_request(b).unwrap().broadcast_hash.as_deref(), Some(SUPERSEDED));
+    testing_env!(ctx("owner.testnet", 4_000).build());
+    let c = v.request_withdraw(Asset::SepoliaEth, "0x1111111111111111111111111111111111111111".into(), U128(400_000_000_000_000), None);
+    assert_eq!(v.get_request(c).unwrap().evm_tx.unwrap().nonce, 1, "next tx reuses the freed nonce");
+}
+
+#[test]
+#[should_panic(expected = "only guardian DAO")]
+fn only_dao_can_rewind_evm_nonce() {
+    let mut v = setup();
+    testing_env!(ctx("owner.testnet", 2_000).build());
+    v.dao_resync_evm_nonce(0);
+}
+
+#[test]
+#[should_panic(expected = "can only rewind the nonce")]
+fn evm_nonce_cannot_jump_forward() {
+    let mut v = setup();
+    testing_env!(ctx("dao.sputnik-v2.testnet", 2_000).build());
+    v.dao_resync_evm_nonce(5);
+}

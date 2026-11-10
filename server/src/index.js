@@ -10,13 +10,16 @@ import { Indexer, DATA_DIR } from './indexer.js';
 import { createLimiter } from './ratelimit.js';
 import { runSandbox, sandboxConfig } from './sandbox.js';
 import { createDispatcher } from '../../alerts/src/dispatcher.js';
+import { loadChatId, waitForStart } from '../../alerts/src/telegram-link.js';
 
 const PORT = Number(process.env.PORT || 8787);
 const HOST = process.env.HOST || '127.0.0.1';
 const st = loadState();
 const sb = sandboxConfig();
 const accounts = [st.vault, sb?.V].filter(Boolean);
+loadChatId();
 const indexer = new Indexer(accounts).start();
+if (process.env.ALERTS !== '0' && process.env.TELEGRAM_BOT_TOKEN && !process.env.TELEGRAM_CHAT_ID) waitForStart();
 const alerts = process.env.ALERTS === '0' ? null : createDispatcher({ indexer, dataDir: DATA_DIR, view, mainVault: st.vault });
 const limiter = createLimiter({
   perClient: Number(process.env.SANDBOX_PER_CLIENT || 2),

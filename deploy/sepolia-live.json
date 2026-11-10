@@ -1,0 +1,86 @@
+{
+  "vault": "vault.rescueroom-j60ox4.testnet",
+  "steps": [
+    {
+      "at": "2026-11-10T10:54:23.518Z",
+      "name": "DAO proposal 16: gas limit 220000, cap 2.0 gwei, tip 0.2 gwei, nonce 2 -> 1",
+      "hash": "EaC1AWd5fGeKiv6kdHgBkHu9WE1Zw6z3W7n1Uy5BJpn8",
+      "explorer": "https://testnet.nearblocks.io/txns/EaC1AWd5fGeKiv6kdHgBkHu9WE1Zw6z3W7n1Uy5BJpn8"
+    },
+    {
+      "at": "2026-11-10T10:54:30.436Z",
+      "name": "Hot send #19: 0.001 ETH to 0xFAF0Db5471b9DfD6876D349CBcAe33a6985ED31f -> MPC sign",
+      "hash": "4YDMKDivMMcq6frCCWXaMGx4Vv6VTLiFk1Yb9xHquXaa",
+      "id": 19,
+      "explorer": "https://testnet.nearblocks.io/txns/4YDMKDivMMcq6frCCWXaMGx4Vv6VTLiFk1Yb9xHquXaa"
+    },
+    {
+      "at": "2026-11-10T10:54:32.274Z",
+      "name": "Held request #20: 0.01 ETH to an unknown address",
+      "hash": "FDWLMrZzjCKqWiLrNQweeCVYuC3gfw9vJEX1VxXvMn7k",
+      "id": 20,
+      "explorer": "https://testnet.nearblocks.io/txns/FDWLMrZzjCKqWiLrNQweeCVYuC3gfw9vJEX1VxXvMn7k"
+    },
+    {
+      "at": "2026-11-10T10:54:38.003Z",
+      "name": "Watcher scored #20",
+      "note": "score 75; explanation by rules"
+    },
+    {
+      "at": "2026-11-10T10:54:46.950Z",
+      "name": "Guardians g2 + g3 rescued #20 -> MPC signs transfer to safe 0xf55b4654d6761e1F3EdEDD2f1c480FB4fD97911F",
+      "hash": "GZZE6t6gmWfh9STADw61Q44xiouAUeamfU2nCbFJVMk5",
+      "explorer": "https://testnet.nearblocks.io/txns/GZZE6t6gmWfh9STADw61Q44xiouAUeamfU2nCbFJVMk5"
+    },
+    {
+      "at": "2026-11-10T10:55:12.619Z",
+      "name": "Sepolia tx #19 nonce 1: 0.001 ETH to 0xFAF0Db5471b9DfD6876D349CBcAe33a6985ED31f, status 1, fee 0.0000409200032736 ETH",
+      "sepolia": "0x8014453541d2255e7fe17b03ab002489bb9a727e767bb17f3617f069e957fdb1",
+      "sepolia_explorer": "https://sepolia.etherscan.io/tx/0x8014453541d2255e7fe17b03ab002489bb9a727e767bb17f3617f069e957fdb1"
+    },
+    {
+      "at": "2026-11-10T10:55:12.619Z",
+      "name": "Sepolia tx #20 nonce 2: 0.01 ETH to 0xf55b4654d6761e1F3EdEDD2f1c480FB4fD97911F, status 1, fee 0.0000409200032736 ETH",
+      "sepolia": "0xe7d3bd40c7bcc737ab0a8b9a088330356b2db918918a3888e55fad2c172275f7",
+      "sepolia_explorer": "https://sepolia.etherscan.io/tx/0xe7d3bd40c7bcc737ab0a8b9a088330356b2db918918a3888e55fad2c172275f7"
+    },
+    {
+      "at": "2026-11-10T10:55:19.892Z",
+      "name": "DAO proposal 17: unfrozen=true",
+      "hash": "691eyLcd5X8yqG4jzoWjkNuffWZxadRxLnSVMQaxLT9n",
+      "explorer": "https://testnet.nearblocks.io/txns/691eyLcd5X8yqG4jzoWjkNuffWZxadRxLnSVMQaxLT9n"
+    }
+  ],
+  "vault_evm": "0x89250Ea451fE4141aE4C31584E41841f53179B74",
+  "sepolia": [
+    {
+      "id": 19,
+      "nonce": 1,
+      "to": "0xFAF0Db5471b9DfD6876D349CBcAe33a6985ED31f",
+      "value": "0.001",
+      "hash": "0x8014453541d2255e7fe17b03ab002489bb9a727e767bb17f3617f069e957fdb1",
+      "explorer": "https://sepolia.etherscan.io/tx/0x8014453541d2255e7fe17b03ab002489bb9a727e767bb17f3617f069e957fdb1",
+      "block": 12104167,
+      "status": 1,
+      "fee_eth": "0.0000409200032736"
+    },
+    {
+      "id": 20,
+      "nonce": 2,
+      "to": "0xf55b4654d6761e1F3EdEDD2f1c480FB4fD97911F",
+      "value": "0.01",
+      "hash": "0xe7d3bd40c7bcc737ab0a8b9a088330356b2db918918a3888e55fad2c172275f7",
+      "explorer": "https://sepolia.etherscan.io/tx/0xe7d3bd40c7bcc737ab0a8b9a088330356b2db918918a3888e55fad2c172275f7",
+      "block": 12104168,
+      "status": 1,
+      "fee_eth": "0.0000409200032736"
+    }
+  ],
+  "balance_after": "0.0389076599930958",
+  "safe_balance_after": "0.01",
+  "first_attempt": {
+    "note": "First broadcast used gas_limit 21000. Sepolia now charges about 207k gas for a value transfer that creates a new account, so it ran out of gas (fee 0.0000105 ETH, value not sent). The DAO then raised gas_limit to 220000 and rewound the nonce.",
+    "sepolia": "0xc6b51cca4295135ae7efb295c2047993c9c801b3b14aa9393747aa17672118d1",
+    "sepolia_explorer": "https://sepolia.etherscan.io/tx/0xc6b51cca4295135ae7efb295c2047993c9c801b3b14aa9393747aa17672118d1"
+  }
+}

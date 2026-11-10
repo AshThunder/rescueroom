@@ -3,7 +3,7 @@
 // If NEAR_AI_API_KEY is set, NEAR AI Cloud (OpenAI-compatible) writes the text.
 
 const NEAR_AI_URL = process.env.NEAR_AI_BASE_URL || 'https://cloud-api.near.ai/v1';
-const NEAR_AI_MODEL = process.env.NEAR_AI_MODEL || 'deepseek-ai/DeepSeek-V3.1';
+const NEAR_AI_MODEL = process.env.NEAR_AI_MODEL || 'deepseek/deepseek-v3.2';
 
 export function templateExplainer({ req, result }) {
   const top = [...result.rawSignals].sort((a, b) => b.weight - a.weight).filter((s) => s.weight > 0).slice(0, 3);
@@ -30,7 +30,7 @@ export async function nearAiExplainer({ req, result }) {
     headers: { 'content-type': 'application/json', authorization: `Bearer ${key}` },
     body: JSON.stringify(body),
   });
-  if (!r.ok) throw new Error(`NEAR AI ${r.status}`);
+  if (!r.ok) throw new Error(`NEAR AI ${r.status}: ${(await r.text()).slice(0, 120)}`);
   const j = await r.json();
   return j.choices?.[0]?.message?.content?.trim() || null;
 }

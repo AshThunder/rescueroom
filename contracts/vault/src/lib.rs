@@ -26,9 +26,11 @@ pub mod evm;
 const EVENT_STANDARD: &str = "rescueroom";
 const VERSION: &str = match option_env!("RR_VERSION") {
     Some(v) => v,
-    None => "1.1.1",
+    None => "1.2.0",
 };
 const EVENT_VERSION: &str = "1.0.0";
+/// broadcast_hash marker for a signed tx replaced by `dao_resync_evm_nonce`.
+pub const SUPERSEDED: &str = "superseded";
 const MS: u64 = 1_000;
 const NEAR_BUFFER: u128 = 500_000_000_000_000_000_000_000; // 0.5 NEAR kept for gas/storage
 const AGENT_KEY_ALLOWANCE: u128 = 1_000_000_000_000_000_000_000_000; // 1 NEAR of gas
@@ -602,6 +604,32 @@ impl Vault {
         Self::validate(&config);
         self.config = config;
         emit("config_updated", json!({ "by": env::predecessor_account_id() }));
+    }
+
+    /// Rewind the Sepolia nonce counter to the chain's confirmed nonce. Use when a signed tx can
+    /// never be mined (for example a rescue larger than the balance left after gas) and blocks
+    /// every later nonce. Signed but unbroadcast txs at or above `nonce` are marked superseded
+    /// so the relayer skips them. Their old signatures stay valid, so only one tx per nonce can
+    /// ever be mined. DAO only.
+    pub fn dao_resync_evm_nonce(&mut self, nonce: u64) {
+        self.only_dao();
+        require!(nonce <= self.evm_nonce, "can only rewind the nonce");
+        let mut superseded = vec![];
+        for id in 0..self.next_id {
+            let Some(mut r) = self.requests.get(&id).cloned() else { continue };
+            let n = match &r.evm_tx {
+                Some(t) => t.nonce,
+                None => continue,
+            };
+            if n >= nonce && r.broadcast_hash.is_none() {
+                r.broadcast_hash = Some(SUPERSEDED.to_string());
+                self.requests.insert(id, r);
+                superseded.push(id);
+            }
+        }
+        let from = self.evm_nonce;
+        self.evm_nonce = nonce;
+        emit("evm_nonce_resynced", json!({ "from": from, "to": nonce, "superseded": superseded, "by": env::predecessor_account_id() }));
     }
 
     // ------------------------------------------------------------ owner tools

@@ -115,7 +115,7 @@ async function main_() {
         chain_id: 11155111,
         max_fee_per_gas: (30n * 10n ** 9n).toString(),
         max_priority_fee_per_gas: (2n * 10n ** 9n).toString(),
-        gas_limit: 21000,
+        gas_limit: 220000, // Sepolia now charges ~207k gas for a value transfer that creates a new account
       },
       cover: { base_premium_bps: 200, per_incident_cap: near(1).toString(), term_secs: 30 * 86400 },
       demo_time_divisor: 60,
