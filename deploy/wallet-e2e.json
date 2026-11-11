@@ -1,6 +1,6 @@
 {
-  "base": "http://127.0.0.1:5173",
-  "at": "2026-11-10T11:37:57.031Z",
+  "base": "https://rescueroom.vercel.app",
+  "at": "2026-11-11T06:26:55.818Z",
   "results": [
     {
       "step": "New withdrawal (owner)",
@@ -16,9 +16,9 @@
       "deposit": "0",
       "gas_tgas": 100,
       "matches_cli": true,
-      "tx": "6oDf3AkpAMTrrRgYJg74PBRPzBZTVKvwqFVttrMZdSmz",
-      "explorer": "https://testnet.nearblocks.io/txns/6oDf3AkpAMTrrRgYJg74PBRPzBZTVKvwqFVttrMZdSmz",
-      "returned": "17"
+      "tx": "U4DZFW5tr8MpfR3YgXeornCTRC1Kmce7NCXT64BkDK3",
+      "explorer": "https://testnet.nearblocks.io/txns/U4DZFW5tr8MpfR3YgXeornCTRC1Kmce7NCXT64BkDK3",
+      "returned": "26"
     },
     {
       "step": "Vote rescue (guardian, 1 of 2)",
@@ -26,13 +26,13 @@
       "signer": "g3.rescueroom-j60ox4.testnet",
       "method": "vote_rescue",
       "args": {
-        "id": 17
+        "id": 26
       },
       "deposit": "0",
       "gas_tgas": 100,
       "matches_cli": true,
-      "tx": "74caXAZkumPStwYXwVo1jw1q36SaN6hpVxZBvTXLcGLd",
-      "explorer": "https://testnet.nearblocks.io/txns/74caXAZkumPStwYXwVo1jw1q36SaN6hpVxZBvTXLcGLd"
+      "tx": "5bsnsQBmYmheGekUNBqQHdszpRUmqZChXDJ4WU3RgMGp",
+      "explorer": "https://testnet.nearblocks.io/txns/5bsnsQBmYmheGekUNBqQHdszpRUmqZChXDJ4WU3RgMGp"
     },
     {
       "step": "Cancel withdrawal (owner)",
@@ -40,13 +40,13 @@
       "signer": "owner.rescueroom-j60ox4.testnet",
       "method": "cancel",
       "args": {
-        "id": 17
+        "id": 26
       },
       "deposit": "0",
       "gas_tgas": 30,
       "matches_cli": true,
-      "tx": "AqpXM4ofwyqBakMfbHXmfBmuh9TxMYjkjcLL2Nfvasq2",
-      "explorer": "https://testnet.nearblocks.io/txns/AqpXM4ofwyqBakMfbHXmfBmuh9TxMYjkjcLL2Nfvasq2"
+      "tx": "AEhvx55qFrjGQzfQXXYmwnW4L76XSwPTgnJegkU6pn8",
+      "explorer": "https://testnet.nearblocks.io/txns/AEhvx55qFrjGQzfQXXYmwnW4L76XSwPTgnJegkU6pn8"
     },
     {
       "step": "Buy cover 0.1 NEAR (owner, deposit)",
@@ -56,12 +56,12 @@
       "args": {
         "coverage": "100000000000000000000000"
       },
-      "deposit": "2780000000000000000000",
+      "deposit": "2800000000000000000000",
       "gas_tgas": 50,
       "matches_cli": true,
-      "tx": "CtkxrinxwR8KKXVMjNpjTgyjsfFKKgUBZrVtPt6s1LBB",
-      "explorer": "https://testnet.nearblocks.io/txns/CtkxrinxwR8KKXVMjNpjTgyjsfFKKgUBZrVtPt6s1LBB",
-      "returned": "2"
+      "tx": "ECRQsbXPJMkMmd7CEZxxGYjHdJYVfWKbNus2FRzcBEvZ",
+      "explorer": "https://testnet.nearblocks.io/txns/ECRQsbXPJMkMmd7CEZxxGYjHdJYVfWKbNus2FRzcBEvZ",
+      "returned": "3"
     },
     {
       "step": "File cover claim (owner)",
@@ -69,7 +69,7 @@
       "signer": "owner.rescueroom-j60ox4.testnet",
       "method": "file_claim",
       "args": {
-        "policy_id": 2,
+        "policy_id": 3,
         "amount": "50000000000000000000000",
         "request_id": null,
         "reason": "wallet e2e test claim"
@@ -77,9 +77,9 @@
       "deposit": "0",
       "gas_tgas": 50,
       "matches_cli": true,
-      "tx": "FL2MMjstWN2yy8PgMBTnC2WFrqVorVPZ2ohzmtZp9XCz",
-      "explorer": "https://testnet.nearblocks.io/txns/FL2MMjstWN2yy8PgMBTnC2WFrqVorVPZ2ohzmtZp9XCz",
-      "returned": "2"
+      "tx": "GKaXF9CtKrQ99N3zgC2qjui9CxmPpzCiDGfGimTapCpq",
+      "explorer": "https://testnet.nearblocks.io/txns/GKaXF9CtKrQ99N3zgC2qjui9CxmPpzCiDGfGimTapCpq",
+      "returned": "4"
     },
     {
       "step": "Approve claim (guardian, 1 of 2)",
@@ -87,23 +87,23 @@
       "signer": "g3.rescueroom-j60ox4.testnet",
       "method": "vote_claim",
       "args": {
-        "claim_id": 2
+        "claim_id": 4
       },
       "deposit": "0",
       "gas_tgas": 100,
       "matches_cli": true,
-      "tx": "EGbyakK45nsgJ26hT4mGgGdhJq1kAG4Km2f2D5uVCFip",
-      "explorer": "https://testnet.nearblocks.io/txns/EGbyakK45nsgJ26hT4mGgGdhJq1kAG4Km2f2D5uVCFip"
+      "tx": "37CD7zjzbcbN6NnGCVDxikTiCJiJ84GDEPmSF9vCLG6c",
+      "explorer": "https://testnet.nearblocks.io/txns/37CD7zjzbcbN6NnGCVDxikTiCJiJ84GDEPmSF9vCLG6c"
     }
   ],
-  "notes": [
-    "could not delete test key on owner.rescueroom-j60ox4.testnet: Unsupported public key format",
-    "could not delete test key on g3.rescueroom-j60ox4.testnet: Unsupported public key format",
-    "could not delete test key on owner.rescueroom-j60ox4.testnet: Unsupported public key format",
-    "could not delete test key on g3.rescueroom-j60ox4.testnet: Unsupported public key format"
-  ],
-  "request_id": 17,
-  "claim_id": 2,
+  "notes": [],
+  "request_id": 26,
+  "explanation": {
+    "provider": "near-ai:deepseek/deepseek-v3.2",
+    "text": "This transaction is risky because it's the first payment to an unknown recipient, involves multiple large requests that exceed safe limits, and uses over half of the available funds."
+  },
+  "explanation_on_page": true,
+  "claim_id": 4,
   "final_request_status": "Cancelled",
   "test_keys_removed": 4,
   "page_errors": []
