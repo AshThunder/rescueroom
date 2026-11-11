@@ -7,6 +7,20 @@ When a stolen key or a confused agent starts moving money, the vault holds the w
 > Status: phase 3, NEAR testnet and Ethereum Sepolia only. Not audited. Do not use with real funds.
 >
 > Live app: **https://rescueroom.vercel.app** (create your own vault, dashboard, wallet signing pages, audit log, alerts, simulate an attack on your vault, public attacker sandbox). Defender health: **https://rescueroom-defender.fly.dev/health**.
+>
+> Built at NEAR HACKATHON. Tracks: `security`, `social`, `agents`. The hosted demo stays up through judging (at least 18 Nov 2026, planned through 25 Nov 2026). License: MIT.
+
+## Try it
+
+Use a NEAR testnet wallet (MyNearWallet, Meteor or HERE) and testnet NEAR. The one-click demo attaches 1.506 NEAR, of which 1.5 is rescued back to your account.
+
+1. Create a one-click demo vault. Open [https://rescueroom.vercel.app/app/new](https://rescueroom.vercel.app/app/new), connect a testnet wallet, and press **Create demo vault**. Sign the transaction. See a new vault, `<name>.factory.rescueroom-j60ox4.testnet`, with your account as the safe and demo guardians g1, g2 and g3.
+2. Run a small batch drain. Open **Simulate an attack**, choose **Small batch drain**, and press **Run small batch drain**. Sign `add_agent_key` for a temporary key that can only call `request_withdraw`. See five small withdrawals execute instantly, then a pattern alert with evidence and a recommendation to tighten the allowance. The rule does not change anything on chain.
+3. Run **Attack on my vault**. On the same page, switch to the full attack and press **Simulate an attack**. Sign the temporary key again. See two spends inside the allowance go through, then a drain of most of the reserve held by the vault.
+4. See the hold scored 100/100. Open the held request. See a watcher score of 100/100, the evidence, and an AI explanation published on-chain with the hash verified.
+5. See the guardian rescue. On a one-click demo vault the demo guardians vote automatically. See the request rescued, funds swept to your account (the safe), the attacker key revoked, and the vault frozen. The 1.5 NEAR demo deposit is returned to you.
+
+A shorter path, if you do not want to create a vault: open the shared sandbox vault, go to **Try to drain it**, and press **Run attacker**. See the drain held and the reserve rescued.
 
 ## Architecture
 
@@ -63,12 +77,23 @@ flowchart LR
 | Alerts | Event-driven: holds (score 30+), rescues, claims, unfreezes, upgrades and failures go to Telegram, a signed webhook and email. Buttons only open signing pages that show the exact call. |
 | Attacker sandbox | "Run attacker" on the "Try to drain it" page runs the scripted drain against a separate sandbox vault through the local API (rate limited), streams each step and shows hot allowance lost against reserve kept. The vault resets after each run. |
 
+
+## How NEAR is used
+
+- **near-sdk contracts and a factory.** The vault (`contracts/vault`, v1.4.0 on factory vaults) and factory (`contracts/factory`, v1.0.0) are Rust contracts on NEAR testnet using near-sdk 5. The factory, `factory.rescueroom-j60ox4.testnet`, deploys a vault as a NEAR global contract (NEP-591) in one transaction, with the caller as owner.
+- **Function-call keys for agents.** `add_agent_key` adds a key on the vault that can call only `request_withdraw`. A rescue revokes it. Attack simulations use a 10-minute TTL (`revoke_expired_agent_keys`).
+- **Sputnik DAO guardians.** The demo treasury's council is `rescueroom-j60ox4-guardians.sputnik-v2.testnet` (g1, g2, g3; 2 of 3). Guardians vote to rescue or approve cover. Vault upgrades, config changes and unfreeze go through a DAO proposal. Factory vaults can use that DAO, another Sputnik DAO, or a council of accounts on the vault itself.
+- **Chain signatures for the Sepolia rescue.** The vault builds the EIP-1559 transaction on-chain and asks `v1.signer-prod.testnet` to sign it. The relayer only broadcasts. Live txs are listed below.
+- **NEAR AI Cloud for watcher explanations.** Scores are deterministic rules. The optional explainer calls `cloud-api.near.ai` (model `deepseek/deepseek-v3.2`) and writes the explanation only. The vault stores a hash of the evidence bundle and emits it on-chain.
+- **NEP-297 events.** Every action emits `standard: "rescueroom"`. The API indexes those events for the audit log, hold pages and alerts.
+
 ## Live on NEAR testnet
 
-Current ids are in [`deploy/testnet.json`](deploy/testnet.json) and [`deploy/sandbox.json`](deploy/sandbox.json).
+Current ids are in [`deploy/testnet.json`](deploy/testnet.json), [`deploy/factory.json`](deploy/factory.json) and [`deploy/sandbox.json`](deploy/sandbox.json).
 
 | | Account |
 | --- | --- |
+| Factory (self-serve vaults, vault code v1.4.0) | [`factory.rescueroom-j60ox4.testnet`](https://testnet.nearblocks.io/address/factory.rescueroom-j60ox4.testnet) |
 | Demo treasury vault (locked, v1.3.0) | [`vault-v2.rescueroom-j60ox4.testnet`](https://testnet.nearblocks.io/address/vault-v2.rescueroom-j60ox4.testnet) |
 | Attacker sandbox vault (locked) | [`sandbox.rescueroom-j60ox4.testnet`](https://testnet.nearblocks.io/address/sandbox.rescueroom-j60ox4.testnet) |
 | Guardian DAO (council g1, g2, g3; 2 of 3) | [`rescueroom-j60ox4-guardians.sputnik-v2.testnet`](https://testnet.nearblocks.io/address/rescueroom-j60ox4-guardians.sputnik-v2.testnet) |
@@ -150,14 +175,16 @@ Keys arrive as one Fly secret, `RR_KEYS`, and are never written to disk: watcher
 
 If the defender stops, every vault still enforces its holds; requests wait unscored at the longest hold and nobody is alerted. `scripts/run-api.sh` (the old single-host loop, `server/src/index.js`) is kept as a fallback; do not run it while the Fly app is up, or two defenders would vote and reset at once.
 
-## Setup
+## Local reproduction
+
+To run the contracts, tests and a local app from this repository.
 
 Requirements: Node 22+, Rust stable 1.95+ with `wasm32-unknown-unknown`, `cargo-near` 0.23, and a funded NEAR testnet account.
 
 ```bash
 npm install && (cd web && npm install)
 cp .env.example .env            # every integration is optional; see below
-npm test                        # 35 contract tests + 14 watcher, alert and API tests
+npm test                        # vault + factory Rust tests, plus watcher, alerts and server tests
 npm run build:contract
 
 node scripts/deploy.mjs <main>.testnet          # roles, guardian DAO, demo vault
@@ -184,6 +211,10 @@ Optional integrations, each switched on by its env vars in `.env`:
 | Public sandbox | `SANDBOX_AGENT_KEY` on the host, defenders running via `npm run api` | localhost only |
 
 Webhook receivers verify `X-RescueRoom-Signature: sha256=<hex>` = HMAC-SHA256(secret, `<X-RescueRoom-Timestamp>.<raw body>`) and reject timestamps older than 5 minutes. `verifyWebhook()` in `alerts/src/webhook-verify.js` does both.
+
+## Tests
+
+`npm test` runs the vault and factory Rust unit tests and the watcher, alerts and server Node tests. `cd contracts/vault && cargo test` and `cd contracts/factory && cargo test` run the contract suites alone (the factory suite has 14 tests). `npm run e2e` replays every scenario on NEAR testnet and writes logs under `deploy/e2e-*.json`. `e2e/wallet-e2e.mjs` checks Wallet Selector signing flows.
 
 ## Upgrades go through the DAO
 
@@ -340,6 +371,25 @@ Known limits:
 - Scores are rules-based. The LLM explainer only writes the explanation.
 - The event indexer depends on the FastNEAR transactions API; events are cached locally and the contract state stays the source of truth.
 
+
+## Built with
+
+- Contracts: Rust, [near-sdk](https://github.com/near/near-sdk-rs) 5.30, [cargo-near](https://github.com/near/cargo-near) 0.23, wasm32-unknown-unknown.
+- Chain and wallets: [near-api-js](https://github.com/near/near-api-js) 7.2, [NEAR Wallet Selector](https://github.com/near/wallet-selector) 10.1 (MyNearWallet, Meteor, HERE).
+- Sepolia relayer: [ethers](https://github.com/ethers-io/ethers.js) 6.17.
+- Web app: Vite 5 + React 18 + TypeScript (Vite official React-TS scaffold), react-router-dom 6, @noble/curves and @noble/hashes, lucide-react, IBM Plex.
+- Alerts: nodemailer. Telegram Bot API. Optional LLM explainer: NEAR AI Cloud.
+- Hosting: Vercel (web app and public API), Fly.io (defender).
+- Existing NEAR protocols used, not vendored: Sputnik DAO (`sputnik-v2.testnet`), chain signatures (`v1.signer-prod.testnet`).
+
+No pre-hackathon library of our own is included. AI coding assistance was used to write and edit this project.
+
 ## Hackathon
 
-Built for the NEAR Hackathon. Tracks: Social Money (lead), Open Innovation, AI Security.
+Built at NEAR HACKATHON, inside the official window (announcement 19 Oct 2026 through development close 14 Nov 2026, 23:59 UTC). This repository's history starts on 10 Nov 2026, during the event. There are no pre-hackathon baseline commits.
+
+Suggested tracks (submission ids): `security`, `social`, `agents`.
+
+The hosted demo at [https://rescueroom.vercel.app](https://rescueroom.vercel.app) and the defender at [https://rescueroom-defender.fly.dev](https://rescueroom-defender.fly.dev/health) stay up through judging (results by 18 Nov 2026; planned through 25 Nov 2026).
+
+License: MIT. See [LICENSE](LICENSE).
