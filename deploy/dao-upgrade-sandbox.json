@@ -1,0 +1,15 @@
+{
+  "at": "2026-11-11T07:02:57.379Z",
+  "vault": "sandbox.rescueroom-j60ox4.testnet",
+  "from": "1.1.0",
+  "to": "1.4.0",
+  "mode": "inline",
+  "code_hash": "8SEbVqtZYg6NAMdWiPMupTD2i2KvkBmGPYAswzY9rVSU",
+  "proposal": 27,
+  "txs": {
+    "store_blob": null,
+    "add_proposal": "BNQW47Z7SMvhfq3xwkHZ5mqnvJL7D9MYJe5nG3F2oE7u",
+    "approve_execute": "EosjA3h4vd4i6o9ThbxPiJP5pEpkACsMidrnwxiydLnU",
+    "remove_blob": null
+  }
+}

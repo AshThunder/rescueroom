@@ -7,7 +7,6 @@ import { useToast } from '../components/Toast';
 import { cliCommand, spec, type CallSpec, type Field } from '../lib/calls';
 import { reqId } from '../lib/format';
 import { nearblocksTx, view } from '../lib/near';
-import { DEPLOY } from '../lib/useVault';
 import { useWallet } from '../lib/wallet';
 
 export function Sign() {
@@ -22,6 +21,8 @@ export function Sign() {
   const s = useMemo(() => {
     if (!data) return null;
     return spec(action, id, {
+      vault: data.vault,
+      council: data.council,
       config: data.config,
       request: data.requests.find((x) => String(x.id) === id),
       claim: data.claims.find((x) => String(x.id) === id),
@@ -35,7 +36,7 @@ export function Sign() {
   if (!data) return <Card><ErrorState error={error || 'unknown'} onRetry={refresh} /></Card>;
   if (!s) return <Card><Empty title="Nothing to sign">This link does not match a request or claim on this vault.</Empty></Card>;
   const r = data.requests.find((x) => String(x.id) === id);
-  return <SignBody key={s.key + id} s={s} r={r ? r.id : undefined} onQuote={(c) => view<string>(DEPLOY.vault, 'quote_premium', { coverage: c.toString() }).then((p) => setPremiums((m) => ({ ...m, [c.toString()]: BigInt(p) })))} refresh={refresh} />;
+  return <SignBody key={s.key + id} s={s} r={r ? r.id : undefined} onQuote={(c) => view<string>(data.vault, 'quote_premium', { coverage: c.toString() }).then((p) => setPremiums((m) => ({ ...m, [c.toString()]: BigInt(p) })))} refresh={refresh} />;
 }
 
 function SignBody({ s, r, onQuote, refresh }: { s: CallSpec; r?: number; onQuote: (c: bigint) => void; refresh: () => void }) {

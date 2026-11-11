@@ -74,6 +74,15 @@ export class Indexer extends EventEmitter {
     }
   }
 
+  /** Start watching another account (hosted defender: vaults discovered from the factory). */
+  add(a) {
+    if (!a || this.state[a]) return false;
+    const f = this.file(a);
+    this.state[a] = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : { seen: [], events: [] };
+    this.accounts.push(a);
+    return true;
+  }
+
   file(a) {
     return path.join(DATA_DIR, `events-${a}.json`);
   }

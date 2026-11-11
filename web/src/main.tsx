@@ -17,6 +17,8 @@ import { Cover } from './pages/Cover';
 import { Activity } from './pages/Activity';
 import { Alerts } from './pages/Alerts';
 import { Attack } from './pages/Attack';
+import { NewVault } from './pages/New';
+import { Connect } from './pages/Connect';
 import { Sign } from './pages/Sign';
 import { ToastProvider } from './components/Toast';
 import { WalletProvider } from './lib/wallet';
@@ -39,6 +41,8 @@ createRoot(document.getElementById('root')!).render(
           <Route path="alerts" element={<Alerts />} />
           <Route path="attack" element={<Attack />} />
           <Route path="sign/:action/:id" element={<Sign />} />
+          <Route path="new" element={<NewVault />} />
+          <Route path="connect" element={<Connect />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

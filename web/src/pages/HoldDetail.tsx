@@ -5,9 +5,10 @@ import { useVault } from '../components/Shell';
 import { Bar, Card, Empty, ErrorState, ExtLink, Kv, LoadingCards, Tag, PageHeader } from '../components/ui';
 import { Ring } from '../components/Ring';
 import { StatusTag, who } from '../components/vault';
-import { DEPLOY, isOpen, useNow } from '../lib/useVault';
+import { isOpen, useNow } from '../lib/useVault';
 import { SIGNAL_LABEL, acct, amt, assetLabel, countdown, dateTime, duration, reqId, short, tierOf } from '../lib/format';
 import { etherscanTx } from '../lib/near';
+import { getVault } from '../lib/active';
 import { api, type IndexedEvent } from '../lib/api';
 import { describeEvent } from '../lib/events';
 import { ExternalLink } from 'lucide-react';
@@ -27,7 +28,7 @@ export function HoldDetail() {
     let stop = false;
     let timer: ReturnType<typeof setTimeout>;
     const load = async () => {
-      const e = await loadEvidence(DEPLOY.vault, r.id, want);
+      const e = await loadEvidence(data!.vault, r.id, want);
       if (stop) return;
       if (e) setEv(e);
       // The event reaches the indexer a few seconds after the score; keep looking until it does.
@@ -76,7 +77,7 @@ export function HoldDetail() {
           <Card title="What this request does" aside="Read from the vault contract">
             <dl>
               <Kv k="Chain">{r.asset === 'Near' ? 'NEAR testnet' : <>Ethereum Sepolia <span className="t3">via NEAR chain signatures</span></>}</Kv>
-              <Kv k="From"><span className="mono small">{r.asset === 'Near' ? DEPLOY.vault : <>{DEPLOY.vault_sepolia_address} <span className="t3">path {c.evm.path}</span></>}</span></Kv>
+              <Kv k="From"><span className="mono small">{r.asset === 'Near' ? data.vault : <>{data.evmAddress} <span className="t3">path {c.evm.path}</span></>}</span></Kv>
               <Kv k="To"><span className="mono small">{r.to}</span></Kv>
               <Kv k="Amount"><span className="mono">{amt(r.asset, r.amount, r.asset === 'Near' ? 4 : 6)}</span> <span className="t3">on {assetLabel(r.asset) === 'NEAR' ? 'NEAR' : 'Sepolia'}</span></Kv>
               <Kv k="Signed by"><span className="mono small">{r.agent ? `function-call key “${r.agent}” (can only call request_withdraw)` : r.requester}</span></Kv>
@@ -207,7 +208,7 @@ function RequestEvents({ id }: { id: number }) {
   const [evs, setEvs] = useState<IndexedEvent[] | null>(null);
   const [down, setDown] = useState(false);
   useEffect(() => {
-    const load = () => api<{ events: IndexedEvent[] }>(`/events?account=${encodeURIComponent(DEPLOY.vault)}&request=${id}`).then((r) => { setEvs(r.events); setDown(false); }).catch(() => setDown(true));
+    const load = () => api<{ events: IndexedEvent[] }>(`/events?account=${encodeURIComponent(getVault())}&request=${id}`).then((r) => { setEvs(r.events); setDown(false); }).catch(() => setDown(true));
     load();
     const t = setInterval(load, 6000);
     return () => clearInterval(t);

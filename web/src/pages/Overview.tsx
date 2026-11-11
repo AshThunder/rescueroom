@@ -1,10 +1,13 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Lock, Plus, ShieldAlert, SlidersHorizontal, SquareTerminal, Wallet, Zap } from 'lucide-react';
 import { useVault } from '../components/Shell';
+import { PatternAlerts } from '../components/Patterns';
+import { isFactoryVault, useActiveVault } from '../lib/active';
+import { vaultLabel } from '../components/VaultPicker';
 import { Bar, Card, Empty, ErrorState, LoadingCards, Tag, PageHeader } from '../components/ui';
 import { Ring } from '../components/Ring';
 import { RiskTag, StatusTag, describe, who } from '../components/vault';
-import { DEPLOY, isOpen, useNow } from '../lib/useVault';
+import { isOpen, useNow } from '../lib/useVault';
 import { acct, amt, countdown, duration, ethAmt, nearAmt, reqId, short, time } from '../lib/format';
 
 export function Overview() {
@@ -24,17 +27,18 @@ export function Overview() {
   const div = c.demo_time_divisor;
   return (
     <>
-      <Header sub={<>Guarded by <span className="mono">{c.guardian_dao}</span> · {s.guardians.length} guardians · {s.approvals_needed} to rescue</>} />
+      <Header sub={<>{data.council ? 'Guardian council' : <>Guarded by <span className="mono">{c.guardian_dao}</span></>} · {s.guardians.length} guardians · {s.approvals_needed} to rescue</>} />
       {error && <div className="banner r mt16 small" role="alert">Live refresh failed: {error}. Showing data from {time(data.updatedAt)} WAT.</div>}
       {s.frozen && (
         <div className="banner r mt24" role="status">
           <ShieldAlert className="ic lg red" aria-hidden />
           <div className="grow">
             <div className="h3">Vault frozen after a rescue</div>
-            <div className="small t2">New withdrawals are blocked until the guardian DAO passes an unfreeze proposal.</div>
+            <div className="small t2">{data.council ? 'New withdrawals are blocked until the guardians vote to unfreeze.' : 'New withdrawals are blocked until the guardian DAO passes an unfreeze proposal.'}</div>
           </div>
         </div>
       )}
+      <PatternAlerts recentMs={86_400_000} />
       {requests.length === 0 && <FirstRun />}
       {top && (
         <div className="banner a mt24">
@@ -76,7 +80,7 @@ export function Overview() {
                 <span className="small t3">{heldEth ? <span className="amber">{ethAmt(heldEth)} held</span> : '0 held'}</span>
               </div>
             </div>
-            <div className="small t3 mt16">Sepolia funds sit at <a className="link mono" href={`https://sepolia.etherscan.io/address/${DEPLOY.vault_sepolia_address}`} target="_blank" rel="noreferrer">{short(DEPLOY.vault_sepolia_address)}</a>, signed by NEAR chain signatures</div>
+            <div className="small t3 mt16">Sepolia funds sit at <a className="link mono" href={`https://sepolia.etherscan.io/address/${data.evmAddress}`} target="_blank" rel="noreferrer">{short(data.evmAddress)}</a>, signed by NEAR chain signatures</div>
           </div>
         </Card>
         <Card title="Cover pool" aside={solv === null ? <Tag>no exposure</Tag> : <Tag tone={solv >= 1 ? 'g' : 'r'} dot>{solv >= 1 ? 'solvent' : 'under-reserved'}</Tag>}>
@@ -135,6 +139,17 @@ export function Overview() {
 }
 
 function FirstRun() {
+  const vault = useActiveVault();
+  if (isFactoryVault(vault))
+    return (
+      <Card className="mt24" title="Get started" aside="New vault">
+        <ol className="steps pad">
+          <li><span className="n">01</span><span className="h3">Fund it</span><span className="small t2">Send testnet NEAR to the vault account, or ETH to its Sepolia address.</span><Link className="link small" to="/app/connect">Fund and agents</Link></li>
+          <li><span className="n">02</span><span className="h3">Connect an agent</span><span className="small t2">Create a key that can only call request_withdraw and copy the JS snippet.</span><Link className="link small" to="/app/connect">Create agent key</Link></li>
+          <li><span className="n">03</span><span className="h3">Simulate an attack</span><span className="small t2">Grant a temporary attacker key and watch the drain get held and rescued.</span><Link className="link small" to="/app/attack"><SquareTerminal className="ic" style={{ width: 12, height: 12, verticalAlign: -1 }} /> Simulate</Link></li>
+        </ol>
+      </Card>
+    );
   return (
     <Card className="mt24" title="Get started" aside="New vault">
       <ol className="steps pad">
@@ -153,9 +168,11 @@ function progress(r: { created_ms: string; release_ms: string }, now: number) {
 }
 
 function Header({ sub }: { sub?: React.ReactNode }) {
+  const vault = useActiveVault();
+  const { data } = useVault();
   return (
     <PageHeader
-      title="Demo treasury"
+      title={data?.info?.label || vaultLabel(vault, data?.info)}
       sub={sub || '\u00a0'}
       actions={<>
         <Link className="btn" to="/app/policy"><SlidersHorizontal className="ic" />Policy</Link>

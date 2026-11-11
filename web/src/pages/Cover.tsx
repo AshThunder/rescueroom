@@ -1,18 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useVault } from '../components/Shell';
+import { parseNear } from '../lib/format';
 import { Bar, Card, Empty, ErrorState, Kv, LoadingCards, Tag, PageHeader } from '../components/ui';
-import { DEPLOY } from '../lib/useVault';
 import { view } from '../lib/near';
 import { acct, dateTime, nearAmt } from '../lib/format';
 
-const YOCTO = 10n ** 24n;
-
-function parseNear(s: string): bigint | null {
-  if (!/^\d+(\.\d{0,6})?$/.test(s.trim())) return null;
-  const [w, f = ''] = s.trim().split('.');
-  return BigInt(w) * YOCTO + BigInt((f + '000000').slice(0, 6)) * 10n ** 18n;
-}
 
 export function Cover() {
   const { data, error, loading, refresh } = useVault();
@@ -23,7 +16,7 @@ export function Cover() {
     if (y === null || y === 0n) return;
     setQuote((q) => ({ ...q, busy: true }));
     const t = setTimeout(() => {
-      view<string>(DEPLOY.vault, 'quote_premium', { coverage: y.toString() })
+      view<string>(data!.vault, 'quote_premium', { coverage: y.toString() })
         .then((v) => setQuote({ v, err: null, busy: false }))
         .catch((e) => setQuote({ v: null, err: e.message, busy: false }));
     }, 300);

@@ -1,6 +1,5 @@
 import { useVault } from '../components/Shell';
 import { Card, ErrorState, ExtLink, Kv, LoadingCards, Tag, PageHeader } from '../components/ui';
-import { DEPLOY } from '../lib/useVault';
 import { duration, ethAmt, nearAmt, short } from '../lib/format';
 import { etherscanAddr, nearblocksAcct } from '../lib/near';
 
@@ -47,7 +46,7 @@ export function PolicyPage() {
           <dl>
             <Kv k="MPC signer"><span className="mono small">{c.evm.mpc_contract}</span></Kv>
             <Kv k="Path"><span className="mono small">{c.evm.path}</span></Kv>
-            <Kv k="Vault on Sepolia"><ExtLink href={etherscanAddr(DEPLOY.vault_sepolia_address)}><span className="mono small">{DEPLOY.vault_sepolia_address}</span></ExtLink></Kv>
+            <Kv k="Vault on Sepolia"><ExtLink href={etherscanAddr(data.evmAddress)}><span className="mono small">{data.evmAddress}</span></ExtLink></Kv>
             <Kv k="Fee cap"><span className="mono small">{Number(BigInt(c.evm.max_fee_per_gas) / 10n ** 9n)} gwei max · {Number(BigInt(c.evm.max_priority_fee_per_gas) / 10n ** 9n)} gwei tip</span></Kv>
             <Kv k="Safe (NEAR)"><span className="mono small">{c.safe_near}</span></Kv>
             <Kv k="Safe (Sepolia)"><span className="mono small">{c.safe_evm}</span></Kv>

@@ -13,8 +13,8 @@ const env = (k, e = process.env) => (e[k] || '').trim();
 export { signWebhook, verifyWebhook } from './webhook-verify.js';
 import { signWebhook } from './webhook-verify.js';
 
-export async function telegram(a, e = process.env) {
-  const token = env('TELEGRAM_BOT_TOKEN', e), chat = env('TELEGRAM_CHAT_ID', e);
+export async function telegram(a, e = process.env, chatOverride) {
+  const token = env('TELEGRAM_BOT_TOKEN', e), chat = chatOverride ? String(chatOverride) : env('TELEGRAM_CHAT_ID', e);
   if (!token || !chat) return 'skipped (set TELEGRAM_BOT_TOKEN and TELEGRAM_CHAT_ID)';
   const base = env('TELEGRAM_API_BASE', e) || 'https://api.telegram.org';
   // Telegram only renders URL buttons for public https links. Otherwise the links go in the text.
@@ -37,6 +37,17 @@ export async function webhook(a, e = process.env) {
   if (secret) headers['x-rescueroom-signature'] = signWebhook(secret, ts, body);
   const r = await fetch(url, { method: 'POST', headers, body, signal: AbortSignal.timeout(10000) });
   return r.ok ? `sent ${r.status}${secret ? ' (signed)' : ' (unsigned: set ALERT_WEBHOOK_SECRET)'}` : `failed ${r.status}`;
+}
+
+// Per-vault webhooks (URL set by the vault owner on the factory). Signed with the defender's ed25519 key:
+// X-RescueRoom-Signature-Ed25519 = hex(sign("<timestamp>.<body>")), public key at GET /health.
+export async function webhookEd25519(a, url, keyPair) {
+  const body = JSON.stringify(a);
+  const ts = Math.floor(Date.now() / 1000);
+  const sig = Buffer.from(keyPair.sign(Buffer.from(`${ts}.${body}`)).signature).toString('hex');
+  const headers = { 'content-type': 'application/json', 'user-agent': 'RescueRoom-Alerts/1', 'x-rescueroom-event': a.event, 'x-rescueroom-timestamp': String(ts), 'x-rescueroom-delivery': a.key || crypto.randomUUID(), 'x-rescueroom-signature-ed25519': sig, 'x-rescueroom-key': keyPair.getPublicKey().toString() };
+  const r = await fetch(url, { method: 'POST', headers, body, signal: AbortSignal.timeout(10000), redirect: 'manual' });
+  return r.ok ? `sent ${r.status} (ed25519)` : `failed ${r.status}`;
 }
 
 let transport;

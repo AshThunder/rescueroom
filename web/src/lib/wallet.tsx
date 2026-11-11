@@ -27,6 +27,8 @@ interface WalletCtx {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   send: (c: TxCall) => Promise<SendResult>;
+  /** Plain NEAR transfer (for example funding a vault). */
+  sendTransfer: (receiver: string, amount: bigint) => Promise<SendResult>;
   error: string | null;
 }
 
@@ -76,7 +78,34 @@ function outcomeOf(o: unknown): SendResult {
   return { hash, value };
 }
 
+/** Test harness only: Playwright can inject a signer that signs with a local testnet key. Inert otherwise. */
+interface TestWallet { accountId: string; name?: string; send: (c: { receiver: string; method?: string; args?: Record<string, unknown>; deposit: string; gas?: string; transfer?: boolean }) => Promise<SendResult> }
+const testWallet = (): TestWallet | undefined => (typeof window === 'undefined' ? undefined : (window as unknown as { __RR_TEST_WALLET__?: TestWallet }).__RR_TEST_WALLET__);
+
 export function WalletProvider({ children }: { children: ReactNode }) {
+  const tw = testWallet();
+  if (tw) return <TestWalletProvider tw={tw}>{children}</TestWalletProvider>;
+  return <RealWalletProvider>{children}</RealWalletProvider>;
+}
+
+function TestWalletProvider({ tw, children }: { tw: TestWallet; children: ReactNode }) {
+  const v = useMemo(
+    () => ({
+      ready: true,
+      accountId: tw.accountId,
+      walletName: tw.name || 'Test wallet',
+      connect: async () => {},
+      disconnect: async () => {},
+      send: (c: TxCall) => tw.send({ receiver: c.receiver, method: c.method, args: c.args, deposit: c.deposit.toString(), gas: c.gas.toString() }),
+      sendTransfer: (receiver: string, amount: bigint) => tw.send({ receiver, deposit: amount.toString(), transfer: true }),
+      error: null,
+    }),
+    [tw],
+  );
+  return <Ctx.Provider value={v}>{children}</Ctx.Provider>;
+}
+
+function RealWalletProvider({ children }: { children: ReactNode }) {
   const ref = useRef<Promise<{ selector: WalletSelector; modal: WalletSelectorModal }> | null>(null);
   const [ready, setReady] = useState(false);
   const [accountId, setAccountId] = useState<string | null>(null);
@@ -138,6 +167,21 @@ export function WalletProvider({ children }: { children: ReactNode }) {
     [get],
   );
 
-  const v = useMemo(() => ({ ready, accountId, walletName, connect, disconnect, send, error }), [ready, accountId, walletName, connect, disconnect, send, error]);
+  const sendTransfer = useCallback(
+    async (receiver: string, amount: bigint): Promise<SendResult> => {
+      const { selector } = await get();
+      const core = await import('@near-wallet-selector/core');
+      const w = await selector.wallet();
+      const out = await w.signAndSendTransaction({
+        receiverId: receiver,
+        actions: [core.actionCreators.transfer(amount)],
+        callbackUrl: window.location.href.split('?')[0],
+      } as Parameters<typeof w.signAndSendTransaction>[0]);
+      return out ? outcomeOf(out) : { hash: null };
+    },
+    [get],
+  );
+
+  const v = useMemo(() => ({ ready, accountId, walletName, connect, disconnect, send, sendTransfer, error }), [ready, accountId, walletName, connect, disconnect, send, sendTransfer, error]);
   return <Ctx.Provider value={v}>{children}</Ctx.Provider>;
 }

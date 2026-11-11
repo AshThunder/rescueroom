@@ -6,14 +6,17 @@ const hid = (id) => `H-${String(id).padStart(4, '0')}`;
 
 export const ALERT_EVENTS = ['risk_scored', 'rescue_executed', 'claim_filed', 'upgrade_started', 'vault_unfrozen', 'sign_failed', 'transfer_failed'];
 
-export function alertFor(ev, { app, req, minScore = 30, mainVault }) {
+export function alertFor(ev, { app, req, minScore = 30, mainVault, sandboxVault }) {
   const d = ev.data || {};
   const base = { event: ev.event, vault: ev.account, vault_label: ev.account.split('.')[0], tx_hash: ev.tx_hash, explorer: ev.explorer, at: new Date(ev.ts_ms || Date.now()).toISOString(), key: ev.key };
-  const link = (text, p) => ({ text, url: `${app}${p}` });
+  // Links for any vault other than the main demo vault carry ?vault=, so a button always opens the
+  // page for the vault that raised the alert.
+  const q = mainVault && ev.account !== mainVault ? `?vault=${encodeURIComponent(ev.account)}` : '';
+  const link = (text, p) => ({ text, url: `${app}${p}${q}` });
   const a = build(ev, d, base, link, req, minScore);
-  // The signing pages act on the main vault. Alerts from any other vault (the public attacker
-  // sandbox) link to the sandbox page instead, so a button can never point at the wrong request.
-  if (a && mainVault && ev.account !== mainVault) a.buttons = [link('Open attacker sandbox', '/app/attack')];
+  // The public attacker sandbox links to its own page (no per-request signing pages there).
+  const isSandbox = sandboxVault ? ev.account === sandboxVault : mainVault && ev.account !== mainVault;
+  if (a && isSandbox) a.buttons = [{ text: 'Open attacker sandbox', url: `${app}/app/attack` }];
   return a;
 }
 
@@ -40,7 +43,7 @@ function build(ev, d, base, link, req, minScore) {
         severity: 'critical',
         request_id: d.id,
         title: d.asset && d.asset !== 'Near' ? `Rescued ${hid(d.id)}: transfer to the safe address signed by MPC` : `Rescued ${hid(d.id)}: ${fmtNear(d.amount || '0')} NEAR reserve moved to the safe account`,
-        body: `Guardians reached quorum. Open requests were cancelled, the agent key was revoked and the vault is frozen until the DAO unfreezes it.`,
+        body: `Guardians reached quorum. Open requests were cancelled, the agent key was revoked and the vault is frozen until the guardians unfreeze it.`,
         buttons: [link('Open incident', `/app/holds/${d.id}`), link('Guardians', '/app/guardians')],
       };
     case 'claim_filed':
@@ -55,11 +58,28 @@ function build(ev, d, base, link, req, minScore) {
     case 'upgrade_started':
       return { ...base, kind: 'upgrade', severity: 'high', title: 'Vault code upgrade executed by the guardian DAO', body: `New code sha256 ${String(d.code_sha256).slice(0, 16)}.`, buttons: [link('Activity', '/app/activity')] };
     case 'vault_unfrozen':
-      return { ...base, kind: 'unfrozen', severity: 'medium', title: 'Vault unfrozen by DAO proposal', body: 'Withdrawals are open again.', buttons: [link('Overview', '/app')] };
+      return { ...base, kind: 'unfrozen', severity: 'medium', title: 'Vault unfrozen by its guardians', body: 'Withdrawals are open again.', buttons: [link('Overview', '/app')] };
     case 'sign_failed':
     case 'transfer_failed':
       return { ...base, kind: 'failed', severity: 'high', request_id: d.id, title: `${ev.event === 'sign_failed' ? 'Signing' : 'Transfer'} failed for ${hid(d.id)}`, body: 'Retry from the hold page.', buttons: [link('Open hold', `/app/holds/${d.id}`)] };
     default:
       return null;
   }
+}
+
+/** Alert for a watcher pattern finding (burst / slow drip of hot-allowance spends). Recommendation only. */
+export function patternAlert(f, { vault, app, mainVault }) {
+  const q = vault === mainVault ? '' : `?vault=${encodeURIComponent(vault)}`;
+  return {
+    kind: 'pattern',
+    severity: 'high',
+    vault,
+    rule: f.rule,
+    key: `pattern:${vault}:${f.key}`,
+    title: `Pattern alert: ${f.title}`,
+    body: `${f.evidence}. Suggested: ${f.suggestion}`,
+    request_ids: f.ids,
+    buttons: [{ text: 'Tighten allowance', url: `${app}/app/policy${q}` }, { text: 'Agent keys', url: `${app}/app/connect${q}` }],
+    at: new Date().toISOString(),
+  };
 }

@@ -1,6 +1,5 @@
 // Describes exactly what each signing page asks the wallet to sign. Nothing here signs.
 import type { Claim, Config, Policy, Request } from './types';
-import { DEPLOY } from './useVault';
 
 const TGAS = 10n ** 12n;
 const YOCTO = 10n ** 24n;
@@ -39,6 +38,9 @@ export function parseAmount(s: string, decimals: number): bigint | null {
 const fixed = (args: Record<string, unknown>, gasT: number, deposit = 0n, depositLabel = 'none') => () => ({ args, deposit, depositLabel, gas: BigInt(gasT) * TGAS });
 
 export interface SpecCtx {
+  vault: string;
+  /** Guardians act as a council of accounts (no DAO): unfreeze is a guardian vote on the vault. */
+  council?: boolean;
   config: Config;
   request?: Request;
   claim?: Claim;
@@ -49,7 +51,7 @@ export interface SpecCtx {
 }
 
 export function spec(action: string, id: string | undefined, x: SpecCtx): CallSpec | null {
-  const v = DEPLOY.vault;
+  const v = x.vault;
   const c = x.config;
   const r = x.request;
   const eth = r?.asset === 'SepoliaEth';
@@ -122,6 +124,9 @@ export function spec(action: string, id: string | undefined, x: SpecCtx): CallSp
       if (!x.claim) return null;
       return { key: 'claim', title: `Approve claim #${x.claim.id}`, signerLabel: 'a guardian', expectedSigners: x.guardians, receiver: v, method: 'vote_claim', fields: [], build: fixed({ claim_id: x.claim.id }, 100), effect: `Adds your approval. At quorum the pool pays ${fmt(BigInt(x.claim.amount))} NEAR (capped) to the policy holder.` };
     case 'unfreeze': {
+      if (x.council) {
+        return { key: 'unfreeze', title: 'Vote to unfreeze', signerLabel: 'a guardian', expectedSigners: x.guardians, receiver: v, method: 'vote_unfreeze', fields: [], build: fixed({}, 30), effect: `Adds your unfreeze vote. When ${c.quorum_pct}% of guardians (at least ${c.min_distinct}) agree, withdrawals open again. This vault has no DAO: its guardians decide.` };
+      }
       const kind = { FunctionCall: { receiver_id: v, actions: [{ method_name: 'dao_unfreeze', args: 'e30=', deposit: '0', gas: '30000000000000' }] } };
       const bond = x.proposalBond ?? YOCTO;
       return { key: 'unfreeze', title: 'Propose unfreeze', signerLabel: 'a guardian (DAO proposal)', expectedSigners: x.guardians, receiver: c.guardian_dao, method: 'add_proposal', fields: [], build: fixed({ proposal: { description: 'Unfreeze Rescue Room vault after incident review', kind } }, 100, bond, `${fmt(bond)} NEAR bond (refunded on approval)`), effect: 'Opens a Sputnik DAO proposal. When the council approves it, the DAO calls dao_unfreeze on the vault.' };

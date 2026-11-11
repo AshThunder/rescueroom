@@ -1,0 +1,45 @@
+# Rescue Room defender on Fly.io. Deploy with: node scripts/deploy-defender.mjs
+app = "rescueroom-defender"
+primary_region = "ams"
+
+[build]
+  dockerfile = "Dockerfile"
+
+[env]
+  PORT = "8080"
+  HOST = "0.0.0.0"
+  APP_URL = "https://rescueroom.vercel.app"
+  RR_STATE_FILE = "/app/fly/state.json"
+  RR_DATA_DIR = "/data"
+  RR_EVIDENCE_DIR = "/data/evidence"
+  RESCUEROOM_HOME = "/data/home"
+  RR_TELEGRAM_STORE = "/data/telegram-main.json"
+  ALERT_MUTE_FILE = "/data/alerts-mute.json"
+  ALERT_BACKFILL_MS = "60000"
+  NEAR_RPC_URL = "https://test.rpc.fastnear.com"
+  NEAR_RPC_FALLBACKS = "https://near-testnet.drpc.org,https://api.zan.top/near-testnet,https://rpc.testnet.near.org"
+  WATCH_INTERVAL_MS = "6000"
+  SEPOLIA_RPC_URL = "https://ethereum-sepolia-rpc.publicnode.com"
+  FASTNEAR_TX_API = "https://tx.test.fastnear.com"
+
+[mounts]
+  source = "rr_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = "off"
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    grace_period = "30s"
+    interval = "30s"
+    method = "GET"
+    path = "/health"
+    timeout = "5s"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"

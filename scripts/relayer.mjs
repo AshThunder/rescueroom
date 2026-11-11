@@ -7,13 +7,17 @@ import { account, view, loadState } from './lib/near.js';
 import { finalize, deriveVaultEvm, SEPOLIA_RPC } from './lib/evm.js';
 
 const st = loadState();
-const VAULT = process.env.VAULT || st.vault;
+const DEFAULT_VAULT = process.env.VAULT || st.vault;
 const eth = new ethers.JsonRpcProvider(SEPOLIA_RPC);
-let expected = null;
+const expectedFor = new Map();
 const explorer = (h) => `https://sepolia.etherscan.io/tx/${h}`;
 
-export async function relayOnce() {
-  expected ||= process.env.VAULT_EVM || (VAULT === st.vault ? st.vault_evm : await deriveVaultEvm(view, VAULT));
+export async function relayOnce(VAULT = DEFAULT_VAULT) {
+  let expected = expectedFor.get(VAULT);
+  if (!expected) {
+    expected = (VAULT === DEFAULT_VAULT && process.env.VAULT_EVM) || (VAULT === st.vault ? st.vault_evm : await deriveVaultEvm(view, VAULT));
+    expectedFor.set(VAULT, expected);
+  }
   const reqs = await view(VAULT, 'list_requests', { from_index: 0, limit: 100 });
   // Broadcast in nonce order; superseded txs carry broadcast_hash "superseded" and are skipped.
   reqs.sort((a, b) => Number(a.evm_tx?.nonce ?? 0) - Number(b.evm_tx?.nonce ?? 0));
@@ -28,15 +32,15 @@ export async function relayOnce() {
     const [bal, nonce] = await Promise.all([eth.getBalance(from), eth.getTransactionCount(from)]);
     const need = tx.value + tx.gasLimit * tx.maxFeePerGas;
     if (bal < need) {
-      console.log(`#${r.id}: vault ${from} has ${ethers.formatEther(bal)} Sepolia ETH, needs ${ethers.formatEther(need)}. Waiting for funding.`);
+      console.log(`${VAULT.split('.')[0]} #${r.id}: vault ${from} has ${ethers.formatEther(bal)} Sepolia ETH, needs ${ethers.formatEther(need)}. Waiting for funding.`);
       continue;
     }
     if (nonce !== tx.nonce) {
-      console.log(`#${r.id}: chain nonce ${nonce} != signed nonce ${tx.nonce}; waiting for earlier txs`);
+      console.log(`${VAULT.split('.')[0]} #${r.id}: chain nonce ${nonce} != signed nonce ${tx.nonce}; waiting for earlier txs`);
       continue;
     }
     const resp = await eth.broadcastTransaction(raw);
-    console.log(`#${r.id}: broadcast ${resp.hash}  ${explorer(resp.hash)}`);
+    console.log(`${VAULT.split('.')[0]} #${r.id}: broadcast ${resp.hash}  ${explorer(resp.hash)}`);
     await account(st.relayer).callFunction({ contractId: VAULT, methodName: 'record_broadcast', args: { id: r.id, tx_hash: resp.hash } });
     sent.push({ id: r.id, nonce: tx.nonce, to: tx.to, value: ethers.formatEther(tx.value), hash: resp.hash, explorer: explorer(resp.hash) });
     if (process.env.RELAY_WAIT !== '0') {
@@ -47,7 +51,7 @@ export async function relayOnce() {
         if (!e.receipt) throw e;
         rc = e.receipt; // mined but reverted (for example out of gas)
       }
-      console.log(`#${r.id}: mined in block ${rc.blockNumber}, status ${rc.status}, gas ${rc.gasUsed} at ${ethers.formatUnits(rc.gasPrice, 'gwei')} gwei`);
+      console.log(`${VAULT.split('.')[0]} #${r.id}: mined in block ${rc.blockNumber}, status ${rc.status}, gas ${rc.gasUsed} at ${ethers.formatUnits(rc.gasPrice, 'gwei')} gwei`);
       Object.assign(sent.at(-1), { block: rc.blockNumber, status: rc.status, fee_eth: ethers.formatEther(rc.gasUsed * rc.gasPrice) });
     }
   }

@@ -11,7 +11,7 @@
   ],
   "scripts": {
     "test": "npm run test:contract && npm run test:js",
-    "test:contract": "cd contracts/vault && cargo test",
+    "test:contract": "cd contracts/vault && cargo test && cd ../factory && cargo test",
     "build:contract": "cd contracts/vault && cargo near build non-reproducible-wasm",
     "deploy": "node scripts/deploy.mjs",
     "e2e": "node --env-file-if-exists=.env scripts/e2e.mjs all",

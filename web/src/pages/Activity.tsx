@@ -6,7 +6,8 @@ import { Card, Empty, ErrorState, Skeleton, Tag, PageHeader } from '../component
 import { api, type IndexedEvent } from '../lib/api';
 import { describeEvent, type Group } from '../lib/events';
 import { acct, dateTime, reqId } from '../lib/format';
-import { DEPLOY } from '../lib/useVault';
+import { useActiveVault } from '../lib/active';
+import { PatternAlerts } from '../components/Patterns';
 
 const FILTERS: { key: Group | 'all'; label: string }[] = [
   { key: 'all', label: 'All' },
@@ -18,19 +19,20 @@ const FILTERS: { key: Group | 'all'; label: string }[] = [
 
 export function Activity() {
   useVault();
+  const vault = useActiveVault();
   const [events, setEvents] = useState<IndexedEvent[] | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [sync, setSync] = useState<number | null>(null);
   const [f, setF] = useState<Group | 'all'>('all');
   const load = useCallback(() => {
-    api<{ events: IndexedEvent[]; last_sync: number }>(`/events?account=${encodeURIComponent(DEPLOY.vault)}&limit=500`)
+    api<{ events: IndexedEvent[]; last_sync: number }>(`/events?account=${encodeURIComponent(vault)}&limit=500`)
       .then((r) => {
         setEvents(r.events);
         setSync(r.last_sync);
         setErr(null);
       })
       .catch((e) => setErr(e.message));
-  }, []);
+  }, [vault]);
   useEffect(() => {
     load();
     const t = setInterval(load, 6000);
@@ -39,7 +41,8 @@ export function Activity() {
   const rows = (events || []).map((e) => ({ e, d: describeEvent(e) })).filter((x) => f === 'all' || x.d.group === f);
   return (
     <>
-      <PageHeader title="Audit log" sub={<>NEP-297 events emitted by <span className="mono">{DEPLOY.vault}</span> (<span className="mono">standard: rescueroom</span>), indexed from NEAR testnet.</>} actions={<><div className="seg" role="group" aria-label="Filter events"> {FILTERS.map((x) => <button key={x.key} aria-pressed={f === x.key} onClick={() => setF(x.key)}>{x.label}</button>)} </div></>} />
+      <PageHeader title="Audit log" sub={<>NEP-297 events emitted by <span className="mono">{vault}</span> (<span className="mono">standard: rescueroom</span>), indexed from NEAR testnet.</>} actions={<><div className="seg" role="group" aria-label="Filter events"> {FILTERS.map((x) => <button key={x.key} aria-pressed={f === x.key} onClick={() => setF(x.key)}>{x.label}</button>)} </div></>} />
+      <PatternAlerts />
       <Card className="mt24" title="Events" aside={<>{sync ? <>synced {dateTime(sync)}</> : null}<button className="btn ghost sm" onClick={load} aria-label="Refresh events"><RefreshCw className="ic" /></button></>}>
         {err && !events ? (
           <ErrorState error={`Event indexer unavailable (${err}). Start it with: npm run api`} onRetry={load} />

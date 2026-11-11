@@ -1,0 +1,19 @@
+# Allow-list: only what the defender needs. Never .env, keys, deploy state or build output.
+*
+!package.json
+!package-lock.json
+!watcher/package.json
+!watcher/src/**
+!alerts/package.json
+!alerts/src/**
+!attacker/package.json
+!scripts/package.json
+!scripts/lib/**
+!scripts/relayer.mjs
+!server/package.json
+!server/src/**
+!fly/state.json
+**/.env
+**/.env.*
+**/*.key
+**/*.pem

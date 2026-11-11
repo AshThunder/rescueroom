@@ -83,3 +83,10 @@ export const SIGNAL_LABEL: Record<string, string> = {
 
 /** Compact NEAR account for tables: attacker.rescueroom-j60ox4.testnet -> attacker…testnet */
 export const acct = (a: string) => (a.length > 22 && a.includes('.') ? `${a.split('.')[0]}…${a.slice(a.lastIndexOf('.'))}` : a);
+
+/** "1.25" -> yoctoNEAR (up to 6 decimals); null if invalid. */
+export function parseNear(s: string): bigint | null {
+  if (!/^\d+(\.\d{0,6})?$/.test(s.trim())) return null;
+  const [w, f = ''] = s.trim().split('.');
+  return BigInt(w) * 10n ** 24n + BigInt((f + '000000').slice(0, 6)) * 10n ** 18n;
+}

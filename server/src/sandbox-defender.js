@@ -16,7 +16,10 @@ export function startDefender({ intervalMs = 3000, log = (m) => console.log(`san
   const V = st.sandbox.vault;
   const SAFE = st.sandbox.safe;
   const keyId = sandboxAgentKeyId(V);
-  if (!hasKey(keyId)) newKey(keyId);
+  if (!hasKey(keyId)) {
+    if (process.env.RR_KEYS) throw new Error(`missing ${keyId} in RR_KEYS`);
+    newKey(keyId);
+  }
   const agentPk = loadKeyPair(keyId).getPublicKey().toString();
   let frozenSince = 0;
   let busy = false;
@@ -71,7 +74,7 @@ export function startDefender({ intervalMs = 3000, log = (m) => console.log(`san
       return;
     }
     if (!(await view(V, 'get_agents')).some(([pk]) => pk === agentPk)) {
-      await call(st.owner, V, 'add_agent_key', { public_key: agentPk, label: 'sandbox-agent' }, { deposit: 1n, gas: 100n * TGAS });
+      await call(st.sandbox.owner || st.owner, V, 'add_agent_key', { public_key: agentPk, label: 'sandbox-agent' }, { deposit: 1n, gas: 100n * TGAS });
       log('re-issued the request-only agent key');
       return;
     }

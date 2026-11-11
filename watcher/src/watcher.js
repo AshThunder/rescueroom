@@ -9,7 +9,7 @@ import { scoreRequest } from './rules.js';
 import { explain } from './explainer.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const EVIDENCE_DIR = path.resolve(HERE, '../evidence');
+export const EVIDENCE_DIR = process.env.RR_EVIDENCE_DIR || path.resolve(HERE, '../evidence');
 const st = loadState();
 const VAULT = process.env.VAULT || st.vault;
 const once = process.argv.includes('--once');
@@ -41,12 +41,25 @@ async function context(vault) {
   };
 }
 
+// NEAR AI explanations are rate-limited per vault (the main demo vault is exempt); over the limit the
+// template explainer writes the text. The score never depends on the explainer.
+const AI_PER_HOUR = Number(process.env.AI_PER_VAULT_HOUR || 6);
+const aiLog = new Map();
+export function aiAllowed(vault, now = Date.now()) {
+  if (vault === st.vault) return true;
+  const l = (aiLog.get(vault) || []).filter((t) => now - t < 3_600_000);
+  const ok = l.length < AI_PER_HOUR;
+  if (ok) l.push(now);
+  aiLog.set(vault, l);
+  return ok;
+}
+
 export async function scoreOne(req, history, vault = VAULT) {
   const VAULT = vault;
   const { ctx, cfg } = await context(vault);
   if (req.asset !== 'Near') ctx.allowance = BigInt(cfg.eth_allowance.limit);
   const result = scoreRequest(req, history, ctx);
-  const explanation = await explain({ req, result });
+  const explanation = await explain({ req, result }, { ai: aiAllowed(vault) });
   const bundle = {
     v: 1,
     vault: VAULT,

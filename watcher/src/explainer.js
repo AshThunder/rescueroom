@@ -35,7 +35,8 @@ export async function nearAiExplainer({ req, result }) {
   return j.choices?.[0]?.message?.content?.trim() || null;
 }
 
-export async function explain(input) {
+export async function explain(input, { ai = true } = {}) {
+  if (!ai) return { provider: 'template', text: templateExplainer(input) };
   try {
     const t = await nearAiExplainer(input);
     if (t) return { provider: `near-ai:${NEAR_AI_MODEL}`, text: t };

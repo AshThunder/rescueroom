@@ -16,6 +16,8 @@
     "@near-wallet-selector/meteor-wallet": "^10.1.4",
     "@near-wallet-selector/modal-ui": "^10.1.4",
     "@near-wallet-selector/my-near-wallet": "^10.1.4",
+    "@noble/curves": "^1.8.1",
+    "@noble/hashes": "^1.8.0",
     "buffer": "^6.0.3",
     "lucide-react": "^1.71.0",
     "react": "^18.3.1",

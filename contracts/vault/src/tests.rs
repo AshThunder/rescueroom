@@ -345,7 +345,7 @@ fn agent_key_requests_are_attributed() {
     let mut v = setup();
     let agent_pk = PublicKey::from_parts(CurveType::ED25519, vec![9u8; 32]).unwrap();
     testing_env!(ctx("owner.testnet", 2_000).attached_deposit(NearToken::from_yoctonear(1)).build());
-    let _ = v.add_agent_key(agent_pk.clone(), "payroll-bot".into());
+    let _ = v.add_agent_key(agent_pk.clone(), "payroll-bot".into(), None);
     testing_env!(ctx("vault.testnet", 3_000).signer_account_pk(agent_pk).build());
     let id = v.request_withdraw(Asset::Near, "vendor.testnet".into(), U128(5 * NEAR), None);
     assert_eq!(v.get_request(id).unwrap().agent.as_deref(), Some("payroll-bot"));
@@ -366,7 +366,7 @@ fn rescue_blocks_all_open_requests_and_revokes_agent() {
     let mut v = setup();
     let agent_pk = PublicKey::from_parts(CurveType::ED25519, vec![9u8; 32]).unwrap();
     testing_env!(ctx("owner.testnet", 2_000).attached_deposit(NearToken::from_yoctonear(1)).build());
-    let _ = v.add_agent_key(agent_pk.clone(), "ops-agent".into());
+    let _ = v.add_agent_key(agent_pk.clone(), "ops-agent".into(), None);
     testing_env!(ctx("vault.testnet", 3_000).signer_account_pk(agent_pk.clone()).build());
     let a = v.request_withdraw(Asset::Near, "drain.testnet".into(), U128(500 * NEAR), None);
     let b = v.request_withdraw(Asset::Near, "drain.testnet".into(), U128(900 * NEAR), None);
@@ -492,4 +492,128 @@ fn evidence_bundle_must_match_the_signed_hash() {
     testing_env!(ctx("watcher.testnet", 3_000).build());
     let sig = sign_score(id, 50, 90, H);
     v.submit_score(id, 50, 90, H.into(), vec![], sig, Some("{\"forged\":true}".into()));
+}
+
+// ---------------------------------------------------------------- 1.4.0
+
+fn council_setup() -> Vault {
+    let mut c = cfg();
+    c.guardian_dao = acc("vault.testnet"); // council mode: no DAO
+    testing_env!(ctx("factory.testnet", 1_000).build());
+    Vault::new(c, vec![acc("g1.testnet"), acc("g2.testnet"), acc("g3.testnet")])
+}
+
+fn rescue_once(v: &mut Vault) {
+    testing_env!(ctx("owner.testnet", 2_000).build());
+    let id = v.request_withdraw(Asset::Near, "drain.testnet".into(), U128(900 * NEAR), None);
+    for g in ["g1.testnet", "g2.testnet"] {
+        testing_env!(ctx(g, 3_000).build());
+        v.vote_rescue(id);
+    }
+    assert!(v.get_status().frozen);
+}
+
+#[test]
+fn council_unfreezes_with_quorum() {
+    let mut v = council_setup();
+    assert!(v.is_council());
+    rescue_once(&mut v);
+    testing_env!(ctx("g1.testnet", 4_000).build());
+    v.vote_unfreeze();
+    assert!(v.get_status().frozen);
+    assert_eq!(v.get_unfreeze_votes().len(), 1);
+    testing_env!(ctx("g3.testnet", 5_000).build());
+    v.vote_unfreeze();
+    assert!(!v.get_status().frozen);
+    assert!(v.get_unfreeze_votes().is_empty());
+}
+
+#[test]
+#[should_panic(expected = "not a guardian")]
+fn council_unfreeze_needs_guardian() {
+    let mut v = council_setup();
+    rescue_once(&mut v);
+    testing_env!(ctx("owner.testnet", 4_000).build());
+    v.vote_unfreeze();
+}
+
+#[test]
+#[should_panic(expected = "unfreezes through its guardian DAO")]
+fn dao_vault_has_no_council_unfreeze() {
+    let mut v = setup();
+    rescue_once(&mut v);
+    testing_env!(ctx("g1.testnet", 4_000).build());
+    v.vote_unfreeze();
+}
+
+#[test]
+#[should_panic(expected = "only guardian DAO")]
+fn council_vault_cannot_be_reconfigured() {
+    let mut v = council_setup();
+    testing_env!(ctx("owner.testnet", 2_000).build());
+    v.dao_update_config(cfg());
+}
+
+#[test]
+fn temporary_agent_key_expires_and_anyone_revokes() {
+    let mut v = setup();
+    let pk = PublicKey::from_parts(CurveType::ED25519, vec![5u8; 32]).unwrap();
+    testing_env!(ctx("owner.testnet", 2_000).attached_deposit(NearToken::from_yoctonear(1)).build());
+    let _ = v.add_agent_key(pk.clone(), "attack-sim".into(), Some(600));
+    assert_eq!(v.get_agent_expiries(), vec![(String::from(&pk), U64(2_000 + 600_000))]);
+    testing_env!(ctx("stranger.testnet", 100_000).build());
+    assert!(v.revoke_expired_agent_keys().is_empty());
+    assert_eq!(v.get_agents().len(), 1);
+    testing_env!(ctx("stranger.testnet", 700_000).build());
+    assert_eq!(v.revoke_expired_agent_keys(), vec![String::from(&pk)]);
+    assert!(v.get_agents().is_empty());
+    assert!(v.get_agent_expiries().is_empty());
+    assert!(get_logs().iter().any(|l| l.contains("agent_revoked") && l.contains("expired")));
+}
+
+#[test]
+fn permanent_agent_key_is_never_expired() {
+    let mut v = setup();
+    let pk = PublicKey::from_parts(CurveType::ED25519, vec![6u8; 32]).unwrap();
+    testing_env!(ctx("owner.testnet", 2_000).attached_deposit(NearToken::from_yoctonear(1)).build());
+    let _ = v.add_agent_key(pk, "payroll".into(), None);
+    testing_env!(ctx("stranger.testnet", 99_000_000).build());
+    assert!(v.revoke_expired_agent_keys().is_empty());
+    assert_eq!(v.get_agents().len(), 1);
+}
+
+#[test]
+#[should_panic(expected = "ttl_secs must be 60-3600")]
+fn agent_ttl_is_bounded() {
+    let mut v = setup();
+    let pk = PublicKey::from_parts(CurveType::ED25519, vec![5u8; 32]).unwrap();
+    testing_env!(ctx("owner.testnet", 2_000).attached_deposit(NearToken::from_yoctonear(1)).build());
+    let _ = v.add_agent_key(pk, "x".into(), Some(86_400));
+}
+
+#[test]
+fn rescue_clears_temporary_key_expiry() {
+    let mut v = setup();
+    let pk = PublicKey::from_parts(CurveType::ED25519, vec![5u8; 32]).unwrap();
+    testing_env!(ctx("owner.testnet", 2_000).attached_deposit(NearToken::from_yoctonear(1)).build());
+    let _ = v.add_agent_key(pk.clone(), "attack-sim".into(), Some(600));
+    testing_env!(ctx("vault.testnet", 3_000).signer_account_pk(pk.clone()).build());
+    let id = v.request_withdraw(Asset::Near, "drain.testnet".into(), U128(900 * NEAR), None);
+    for g in ["g1.testnet", "g2.testnet"] {
+        testing_env!(ctx(g, 4_000).build());
+        v.vote_rescue(id);
+    }
+    assert!(v.get_agents().is_empty());
+    assert!(v.get_agent_expiries().is_empty());
+}
+
+#[test]
+#[should_panic(expected = "Sepolia is off for this vault")]
+fn eth_requests_need_a_safe_address() {
+    let mut c = cfg();
+    c.safe_evm = "0x0000000000000000000000000000000000000000".into();
+    testing_env!(ctx("deployer.testnet", 1_000).build());
+    let mut v = Vault::new(c, vec![acc("g1.testnet"), acc("g2.testnet")]);
+    testing_env!(ctx("owner.testnet", 2_000).build());
+    v.request_withdraw(Asset::SepoliaEth, "0x1111111111111111111111111111111111111111".into(), U128(1), None);
 }

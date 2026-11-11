@@ -34,7 +34,13 @@ pub const SUPERSEDED: &str = "superseded";
 /// Largest evidence bundle `submit_score` will publish in an event.
 const MAX_EVIDENCE_BYTES: usize = 6_000;
 const MS: u64 = 1_000;
-const NEAR_BUFFER: u128 = 500_000_000_000_000_000_000_000; // 0.5 NEAR kept for gas/storage
+const NEAR_BUFFER: u128 = 200_000_000_000_000_000_000_000; // 0.2 NEAR kept for agent-key gas, on top of storage
+/// Longest life of a temporary agent key (for example the "simulate an attack" key).
+const MAX_AGENT_TTL_SECS: u64 = 3_600;
+/// Storage prefixes added in 1.4.0. They live outside the state struct so older state still loads.
+const P_AGENT_EXPIRY: &[u8] = b"x";
+const K_UNFREEZE_VOTES: &[u8] = b"uv";
+const ZERO_EVM: &str = "0x0000000000000000000000000000000000000000";
 const AGENT_KEY_ALLOWANCE: u128 = 1_000_000_000_000_000_000_000_000; // 1 NEAR of gas
 
 // ---------------------------------------------------------------- types
@@ -417,6 +423,7 @@ impl Vault {
             }
             Asset::SepoliaEth => {
                 require!(evm::parse_address(&to).is_some(), "bad EVM address");
+                require!(self.config.safe_evm.to_lowercase() != ZERO_EVM, "Sepolia is off for this vault: set a Sepolia safe address first");
             }
         }
         let now = now_ms();
@@ -608,6 +615,36 @@ impl Vault {
         emit("vault_unfrozen", json!({ "by": env::predecessor_account_id() }));
     }
 
+    /// Council mode (guardian_dao is the vault itself, so there is no DAO): guardians unfreeze the
+    /// vault with the same quorum a rescue needs.
+    pub fn vote_unfreeze(&mut self) {
+        require!(self.council_mode(), "this vault unfreezes through its guardian DAO");
+        require!(self.frozen, "vault is not frozen");
+        let voter = env::predecessor_account_id();
+        require!(self.guardians.contains(&voter), "not a guardian");
+        let mut votes = self.unfreeze_votes();
+        require!(!votes.contains(&voter), "already voted");
+        votes.push(voter.clone());
+        let needed = self.approvals_needed();
+        emit("unfreeze_vote", json!({ "guardian": voter, "approvals": votes.len(), "needed": needed }));
+        if votes.len() as u32 >= needed {
+            env::storage_remove(K_UNFREEZE_VOTES);
+            self.frozen = false;
+            emit("vault_unfrozen", json!({ "by": "guardian council" }));
+        } else {
+            env::storage_write(K_UNFREEZE_VOTES, &near_sdk::borsh::to_vec(&votes).unwrap());
+        }
+    }
+
+    pub fn get_unfreeze_votes(&self) -> Vec<AccountId> {
+        self.unfreeze_votes()
+    }
+
+    /// True when guardians act as a council without a Sputnik DAO.
+    pub fn is_council(&self) -> bool {
+        self.council_mode()
+    }
+
     /// Safety-critical config can only change through the DAO.
     pub fn dao_update_config(&mut self, config: Config) {
         self.only_dao();
@@ -674,12 +711,23 @@ impl Vault {
     /// Give an AI agent a function-call key on this vault that can only call
     /// `request_withdraw`. Requires a full-access-key call (1 yocto).
     #[payable]
-    pub fn add_agent_key(&mut self, public_key: PublicKey, label: String) -> Promise {
+    pub fn add_agent_key(&mut self, public_key: PublicKey, label: String, ttl_secs: Option<u64>) -> Promise {
         self.only_owner();
         require!(env::attached_deposit() >= NearToken::from_yoctonear(1), "attach 1 yocto");
+        require!(label.len() <= 64, "label too long");
         let pk_str = String::from(&public_key);
+        require!(self.agents.get(&pk_str).is_none(), "key already registered");
         self.agents.insert(pk_str.clone(), AgentInfo { label: label.clone(), added_ms: U64(now_ms()) });
-        emit("agent_added", json!({ "public_key": pk_str, "label": label }));
+        let expires = ttl_secs.map(|t| {
+            require!(t >= 60 && t <= MAX_AGENT_TTL_SECS, "ttl_secs must be 60-3600");
+            now_ms() + t * MS
+        });
+        if let Some(e) = expires {
+            let mut m: LookupMap<String, u64> = LookupMap::new(P_AGENT_EXPIRY);
+            m.insert(pk_str.clone(), e);
+            m.flush();
+        }
+        emit("agent_added", json!({ "public_key": pk_str, "label": label, "expires_ms": expires.map(U64) }));
         Promise::new(env::current_account_id()).add_access_key_allowance(
             public_key,
             Allowance::limited(NearToken::from_yoctonear(AGENT_KEY_ALLOWANCE)).unwrap(),
@@ -694,8 +742,32 @@ impl Vault {
         require!(env::attached_deposit() >= NearToken::from_yoctonear(1), "attach 1 yocto");
         let pk_str = String::from(&public_key);
         self.agents.remove(&pk_str);
+        Self::clear_expiry(&pk_str);
         emit("agent_removed", json!({ "public_key": pk_str }));
         Promise::new(env::current_account_id()).delete_key(public_key)
+    }
+
+    /// Anyone may delete temporary agent keys whose time is up. Returns the keys removed.
+    pub fn revoke_expired_agent_keys(&mut self) -> Vec<String> {
+        let m: LookupMap<String, u64> = LookupMap::new(P_AGENT_EXPIRY);
+        let now = now_ms();
+        let expired: Vec<String> = self.agents.keys().filter(|k| m.get(*k).map_or(false, |e| *e <= now)).cloned().collect();
+        drop(m);
+        for pk in &expired {
+            self.agents.remove(pk);
+            Self::clear_expiry(pk);
+            emit("agent_revoked", json!({ "public_key": pk, "reason": "expired" }));
+            if let Ok(key) = pk.parse::<PublicKey>() {
+                let _ = Promise::new(env::current_account_id()).delete_key(key);
+            }
+        }
+        expired
+    }
+
+    /// Expiry (ms) of each temporary agent key.
+    pub fn get_agent_expiries(&self) -> Vec<(String, U64)> {
+        let m: LookupMap<String, u64> = LookupMap::new(P_AGENT_EXPIRY);
+        self.agents.keys().filter_map(|k| m.get(k).map(|e| (k.clone(), U64(*e)))).collect()
     }
 
     /// Relayer records the Sepolia tx hash after broadcasting a signed tx.
@@ -981,6 +1053,23 @@ impl Vault {
         require!(env::predecessor_account_id() == self.config.owner, "only owner");
     }
 
+    fn council_mode(&self) -> bool {
+        self.config.guardian_dao == env::current_account_id()
+    }
+
+    fn unfreeze_votes(&self) -> Vec<AccountId> {
+        env::storage_read(K_UNFREEZE_VOTES)
+            .and_then(|b| near_sdk::borsh::from_slice::<Vec<AccountId>>(&b).ok())
+            .unwrap_or_default()
+    }
+
+    fn clear_expiry(pk: &String) {
+        let mut m: LookupMap<String, u64> = LookupMap::new(P_AGENT_EXPIRY);
+        if m.remove(pk).is_some() {
+            m.flush();
+        }
+    }
+
     fn only_dao(&self) {
         require!(env::predecessor_account_id() == self.config.guardian_dao, "only guardian DAO");
     }
@@ -1123,6 +1212,7 @@ impl Vault {
         self.requests.insert(id, req);
         self.open_ids.remove(&id);
         self.frozen = true;
+        env::storage_remove(K_UNFREEZE_VOTES);
         self.rescues += 1;
         // Block every other held request too: an attacker rarely sends just one.
         let others: Vec<u64> = self.open_ids.iter().copied().collect();
@@ -1138,6 +1228,7 @@ impl Vault {
         // Revoke the agent key that made the rescued request.
         if let Some(pk) = agent_pk {
             if self.agents.remove(&pk).is_some() {
+                Self::clear_expiry(&pk);
                 emit("agent_revoked", json!({ "public_key": pk, "reason": "rescue" }));
                 if let Ok(key) = pk.parse::<PublicKey>() {
                     let _ = Promise::new(env::current_account_id()).delete_key(key);

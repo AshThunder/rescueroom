@@ -1,0 +1,21 @@
+{
+  "network": "testnet",
+  "factory": "factory.rescueroom-j60ox4.testnet",
+  "owner": "rescueroom-j60ox4-guardians.sputnik-v2.testnet",
+  "vault_code_hash": "8SEbVqtZYg6NAMdWiPMupTD2i2KvkBmGPYAswzY9rVSU",
+  "vault_version": "1.4.0",
+  "factory_version": "1.0.0",
+  "costs": {
+    "vault_storage": "20000000000000000000000",
+    "registry_fee": "6000000000000000000000",
+    "min_deposit": "26000000000000000000000",
+    "demo_deposit": "1500000000000000000000000"
+  },
+  "demo_guardians": [
+    "g1.rescueroom-j60ox4.testnet",
+    "g2.rescueroom-j60ox4.testnet",
+    "g3.rescueroom-j60ox4.testnet"
+  ],
+  "access_keys": 1,
+  "vault_count": 4
+}

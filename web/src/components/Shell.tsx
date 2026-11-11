@@ -1,10 +1,12 @@
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { Bell, Hourglass, LayoutDashboard, ListTree, Menu, SlidersHorizontal, SquareTerminal, Umbrella, Users, X } from 'lucide-react';
+import { Bell, Hourglass, KeyRound, LayoutDashboard, ListTree, Menu, Plus, SlidersHorizontal, SquareTerminal, Umbrella, Users, X } from 'lucide-react';
 import { Mark } from './Ring';
 import { WalletButton } from './WalletButton';
 import { Boundary } from './Boundary';
-import { DEPLOY, isOpen, useVaultData, type VaultState } from '../lib/useVault';
+import { isOpen, useVaultData, type VaultState } from '../lib/useVault';
+import { isFactoryVault, isRescueVault, setVault, useActiveVault } from '../lib/active';
+import { VaultPicker } from './VaultPicker';
 
 const Ctx = createContext<VaultState | null>(null);
 export function useVault(): VaultState {
@@ -13,7 +15,7 @@ export function useVault(): VaultState {
   return v;
 }
 
-const NAV = [
+const navFor = (factory: boolean) => [
   { to: '/app', icon: LayoutDashboard, label: 'Overview', end: true },
   { to: '/app/holds', icon: Hourglass, label: 'Holds', count: true },
   { to: '/app/guardians', icon: Users, label: 'Guardians' },
@@ -21,19 +23,24 @@ const NAV = [
   { to: '/app/cover', icon: Umbrella, label: 'Cover pool' },
   { to: '/app/activity', icon: ListTree, label: 'Audit log' },
   { to: '/app/alerts', icon: Bell, label: 'Alerts' },
-  { to: '/app/attack', icon: SquareTerminal, label: 'Try to drain it' },
+  { to: '/app/connect', icon: KeyRound, label: 'Fund and agents' },
+  { to: '/app/attack', icon: SquareTerminal, label: factory ? 'Simulate an attack' : 'Try to drain it' },
 ];
+const NEW = { to: '/app/new', icon: Plus, label: 'Create a vault' };
 
 function Nav({ openCount, onNavigate }: { openCount: number; onNavigate?: () => void }) {
+  const factory = isFactoryVault(useActiveVault());
   return (
     <nav className="nav" aria-label="Vault">
-      {NAV.map((n) => (
+      {navFor(factory).map((n) => (
         <NavLink key={n.to} to={n.to} end={n.end} className={({ isActive }) => (isActive ? 'on' : '')} onClick={onNavigate}>
           <n.icon className="ic" aria-hidden />
           {n.label}
           {n.count && openCount > 0 && <span className="ct hot" aria-label={`${openCount} open`}>{openCount}</span>}
         </NavLink>
       ))}
+      <div className="navlabel">Get started</div>
+      <NavLink to={NEW.to} className={({ isActive }) => (isActive ? 'on' : '')} onClick={onNavigate}><NEW.icon className="ic" aria-hidden />{NEW.label}</NavLink>
     </nav>
   );
 }
@@ -55,11 +62,17 @@ function ChainFoot({ v }: { v: VaultState }) {
 }
 
 export function Shell() {
-  const v = useVaultData();
-  const [menu, setMenu] = useState(false);
   const loc = useLocation();
+  // Deep links (alerts, simulate results) carry ?vault=<id>.
+  useEffect(() => {
+    const q = new URLSearchParams(loc.search).get('vault');
+    if (isRescueVault(q)) setVault(q);
+  }, [loc.search]);
+  const vault = useActiveVault();
+  const v = useVaultData(vault);
+  const [menu, setMenu] = useState(false);
   const openCount = v.data?.requests.filter(isOpen).length ?? 0;
-  const crumb = NAV.find((n) => (n.end ? loc.pathname === n.to : loc.pathname.startsWith(n.to)))?.label ?? 'Vault';
+  const crumb = [...navFor(isFactoryVault(vault)), NEW].find((n) => ('end' in n && n.end ? loc.pathname === n.to : loc.pathname.startsWith(n.to)))?.label ?? 'Vault';
   return (
     <Ctx.Provider value={v}>
       <a href="#main" className="skip">Skip to content</a>
@@ -67,12 +80,7 @@ export function Shell() {
         <aside className="side">
           <div className="sidein">
             <div className="brand"><Mark />Rescue Room</div>
-            <div className="vaultpick" title={DEPLOY.vault}>
-              <div className="grow">
-                <div className="v ellip">Demo treasury</div>
-                <div className="s ellip">{DEPLOY.vault}</div>
-              </div>
-            </div>
+            <VaultPicker />
             <div className="navlabel">Vault</div>
             <Nav openCount={openCount} />
             <ChainFoot v={v} />
@@ -90,6 +98,7 @@ export function Shell() {
           </div>
           {menu && (
             <div className="drawer">
+              <div style={{ padding: '0 0 12px' }}><VaultPicker onPick={() => setMenu(false)} /></div>
               <Nav openCount={openCount} onNavigate={() => setMenu(false)} />
             </div>
           )}

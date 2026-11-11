@@ -1,6 +1,6 @@
 # Rescue Room demo video script
 
-Target length: 2 min 40 s. Screen recording of https://rescueroom.vercel.app at 1440×900, plus one Sepolia Etherscan tab and one NearBlocks tab. Calm voiceover, no music bed needed. All on NEAR testnet and Ethereum Sepolia.
+Target length: 2 min 40 s (3 min 15 s with shot 8b). Screen recording of https://rescueroom.vercel.app at 1440×900, plus one Sepolia Etherscan tab and one NearBlocks tab. Calm voiceover, no music bed needed. All on NEAR testnet and Ethereum Sepolia.
 
 Before recording: open the dashboard once so live data is loaded; have the Etherscan rescue tx and a recent hold page open in background tabs; make sure the attacker sandbox is idle (Try to drain it page shows "Run attacker" enabled).
 
@@ -14,6 +14,7 @@ Before recording: open the dashboard once so live data is loaded; have the Ether
 | 6 | 1:25–1:42 | Scenario 3, cover payout. Cover pool page: solvency, policies, the paid claim. | "Scenario three. Holds protect the reserve, but the hot allowance can still be lost. The owner bought cover, filed a claim for that loss, guardians approved it, and the pool paid out, capped per incident." |
 | 7 | 1:42–2:05 | Back on "Try to drain it", the "Live Sepolia broadcasts" table. Click the rescue tx; Etherscan shows Success, to 0xf55b…911F. | "Sepolia ETH works the same way through NEAR chain signatures. Here is a real Sepolia rescue: the vault's MPC-derived address sent the held amount to the DAO's safe address. The relayer only broadcasts; it cannot change where the money goes." |
 | 8 | 2:05–2:35 | Click "Run attacker". Let the stream play: requests, "Watcher scored the drain", guardian votes, the result bar "hot allowance lost vs reserve kept". | "Anyone can try it. Run attacker fires the scripted drain at a sandbox vault, live on testnet. About thirty seconds later: the hot allowance is gone, the reserve is safe." |
+| 8b | +0:35 | **Judge creates own vault.** Click Create a vault (sidebar), connect a testnet wallet, pick the one-click demo vault card (guardians g1–g3 tagged "demo guardian, run by Rescue Room"), press Create demo vault and approve one transaction. "Vault created" appears; open Simulate an attack, approve the temporary attacker key, and let the stream run: two allowance spends paid, the drain held, the watcher's explanation, g1 and g2 vote, Rescued to your own account. Optional: switch to Small batch drain to show the Pattern alert. | "Your turn. One transaction creates your own vault with test guardians. Grant a ten-minute key that can only request withdrawals, and watch the attacker drain your vault: held, explained, rescued back to you in about thirty seconds. Stay under the limit with many small spends, and the watcher flags the pattern instead." |
 | 9 | 2:35–2:45 | Signing page (Holds → a hold → Vote to rescue) showing "What you are signing" and the wallet button; then the landing threat-model table. | "Alerts only link here. Every action is signed in your own wallet after the page shows the exact call. Rescue Room: hold the drain, explain it, rescue the rest." |
 
 Notes for the edit

@@ -2,7 +2,12 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { CircleAlert, CircleCheck, ExternalLink, Hourglass, LoaderCircle, Play, RotateCcw, ShieldCheck, SquareTerminal, Zap } from 'lucide-react';
 import { Bar, Card, ExtLink, Tag, PageHeader } from '../components/ui';
 import { useToast } from '../components/Toast';
-import { api } from '../lib/api';
+import { api, defender, DEFENDER_URL, postStream } from '../lib/api';
+import { Link } from 'react-router-dom';
+import { useVault } from '../components/Shell';
+import { useWallet } from '../lib/wallet';
+import { isFactoryVault, useActiveVault } from '../lib/active';
+import { Sparkles, Snowflake, KeyRound } from 'lucide-react';
 import { nearAmt } from '../lib/format';
 import attack from '@deploy/e2e-attack.json';
 import falseAlarm from '@deploy/e2e-falsealarm.json';
@@ -22,6 +27,8 @@ const RUNS: { key: string; title: string; steps: Step[] }[] = [
 ];
 
 export function Attack() {
+  const vault = useActiveVault();
+  if (isFactoryVault(vault)) return <SimulateMine />;
   return (
     <>
       <PageHeader title="Try to drain it" sub={<>A scripted attacker holding a stolen agent key tries to empty the vault in chunks. No real-money bounty; testnet only.</>} />
@@ -228,4 +235,175 @@ function SepoliaLive() {
       <div className="pad small t3">Signed by the vault <span className="mono">{live.vault}</span> through NEAR chain signatures (MPC), broadcast by the relayer. Gas limit 220k because Sepolia charges about 207k gas for a transfer that creates a new account.</div>
     </Card>
   );
+}
+
+interface Prep { sim: string; vault: string; public_key: string; ttl_secs: number; call: { receiver: string; method: string; args: Record<string, unknown>; deposit: string; gas: string } }
+interface MEv { type: string; title?: string; evidence?: string; suggestion?: string; mode?: string; patterns?: number; seq: number; at?: number; label?: string; note?: string; explorer?: string; outcome?: string; message?: string; text?: string; provider?: string; rescued?: boolean; status?: string; drain?: string; frozen?: boolean; key_revoked?: boolean; links?: { hold: string; rescue: string; cancel: string }; ms?: number; reserve?: string; hot_allowance?: string; score?: number }
+const PENDING_SIM = 'rr.sim';
+const local = (u: string) => { try { const x = new URL(u); return x.pathname + x.search; } catch { return u; } };
+
+/** "Simulate an attack on my vault": the owner grants a temporary request_withdraw-only key, the defender attacks with it. */
+function SimulateMine() {
+  const { data, error, loading, refresh } = useVault();
+  const w = useWallet();
+  const toast = useToast();
+  const [evs, setEvs] = useState<MEv[]>([]);
+  const [phase, setPhase] = useState<'idle' | 'preparing' | 'signing' | 'running' | 'done'>('idle');
+  const [mode, setMode] = useState<'drain' | 'batch'>('drain');
+  const started = useRef(false);
+
+  const stream = useCallback(async (sim: string) => {
+    setPhase('running');
+    setEvs([]);
+    try {
+      await postStream(`${DEFENDER_URL}/sim/start`, { sim }, (e) => {
+        const m = e as unknown as MEv;
+        setEvs((l) => [...l, m]);
+        if (m.type === 'result' && m.mode === 'batch') toast.push({ title: m.patterns ? 'Pattern alert raised' : 'No pattern fired', body: m.patterns ? 'The burst of small withdrawals was flagged. Nothing was changed on chain.' : 'Try again when the allowance resets.' });
+        else if (m.type === 'result') toast.push(m.rescued ? { tone: 'ok', title: 'Rescued', body: 'The drain was held and the guardians moved the reserve to your safe account.' } : { title: `Drain ${m.status?.toLowerCase()}`, body: 'Nothing left the vault beyond the allowance.' });
+        if (m.type === 'error') toast.push({ tone: 'err', title: 'Simulation stopped', body: m.message });
+      });
+    } catch (e) {
+      toast.push({ tone: 'err', title: 'Lost the simulation stream', body: (e as Error).message });
+    }
+    sessionStorage.removeItem(PENDING_SIM);
+    started.current = false;
+    setPhase('done');
+    refresh();
+  }, [toast, refresh]);
+
+  // Back from a redirect wallet with the key granted: start the run.
+  useEffect(() => {
+    const p = sessionStorage.getItem(PENDING_SIM);
+    if (p && !started.current && data) {
+      const x = JSON.parse(p) as { sim: string; vault: string };
+      if (x.vault === data.vault) {
+        started.current = true;
+        stream(x.sim);
+      }
+    }
+  }, [data, stream]);
+
+  if (loading && !data) return <LoadingCardsLite />;
+  if (!data) return <Card><div className="pad">{error}</div></Card>;
+  const isOwner = w.accountId === data.config.owner;
+  const demo = !!data.info?.demo;
+  const available = BigInt(data.status.near_available);
+  const ready = !data.status.frozen && available >= 3n * 10n ** 23n;
+
+  async function go() {
+    if (!w.accountId) return w.connect();
+    setPhase('preparing');
+    let p: Prep;
+    try {
+      p = await defender<Prep>('/sim/prepare', { method: 'POST', body: JSON.stringify({ vault: data!.vault, mode }) });
+    } catch (e) {
+      const x = e as Error & { retry?: number };
+      toast.push({ tone: 'err', title: 'Cannot simulate yet', body: x.message + (x.retry ? ` Try again in ${Math.ceil(x.retry / 60)} min.` : '') });
+      return setPhase('idle');
+    }
+    setPhase('signing');
+    started.current = true;
+    sessionStorage.setItem(PENDING_SIM, JSON.stringify({ sim: p.sim, vault: p.vault }));
+    try {
+      await w.send({ receiver: p.call.receiver, method: p.call.method, args: p.call.args, deposit: BigInt(p.call.deposit), gas: BigInt(p.call.gas) });
+    } catch (e) {
+      sessionStorage.removeItem(PENDING_SIM);
+      started.current = false;
+      toast.push({ tone: 'err', title: 'Key not granted', body: (e as Error).message.slice(0, 200) });
+      return setPhase('idle');
+    }
+    stream(p.sim);
+  }
+
+  const steps = evs.filter((e) => e.type === 'step' || e.type === 'error');
+  const expl = evs.find((e) => e.type === 'explanation');
+  const decide = evs.find((e) => e.type === 'decide');
+  const result = evs.find((e) => e.type === 'result');
+  const patterns = evs.filter((e) => e.type === 'pattern');
+  const busy = phase === 'preparing' || phase === 'signing' || phase === 'running';
+  return (
+    <>
+      <PageHeader title="Simulate an attack" sub={<>A scripted attacker gets a temporary key to <span className="mono">{data.vault}</span>, spends inside the allowance, then tries to drain the rest. Testnet only.</>} />
+      <Card className="mt24" title="Attack on my vault" aside={demo ? <Tag tone="a">demo guardians auto-vote</Tag> : <Tag>your guardians decide</Tag>}>
+        <div className="pad stack g16">
+          <ol className="steps3 small t2" style={{ margin: 0, paddingLeft: 18 }}>
+            <li>You sign once to grant an attacker key: function-call only, <span className="mono">request_withdraw</span> only, revoked automatically within 10 minutes.</li>
+            <li>The attacker spends inside the hot allowance (paid at once, then returned to you by Rescue Room), then tries to drain 90% of the reserve.</li>
+            <li>The drain is held, the watcher scores and explains it, and {demo ? 'the demo guardians run by Rescue Room vote to rescue it to your account.' : 'your guardians can rescue or you can cancel.'}</li>
+          </ol>
+          {data.status.frozen && <div className="banner a small" role="status"><Snowflake className="ic amber" aria-hidden /><span>The vault is frozen after a rescue. {demo ? 'The demo guardians unfreeze it about 2 minutes after a rescue.' : data.council ? <>Guardians unfreeze it with <Link className="link" to="/app/sign/unfreeze/0">a vote</Link>.</> : <>The DAO unfreezes it with <Link className="link" to="/app/sign/unfreeze/0">a proposal</Link>.</>}</span></div>}
+          {!data.status.frozen && available < 3n * 10n ** 23n && <div className="banner a small" role="status"><span>The vault needs at least 0.3 NEAR available (has {nearAmt(available, 3)}). <Link className="link" to="/app/connect">Fund it</Link>.</span></div>}
+          {!isOwner && <div className="banner small">{w.accountId ? <>Only the owner <span className="mono">{data.config.owner}</span> can grant the attacker key.</> : 'Connect the owner wallet to start.'}</div>}
+          <div className="seg" style={{ alignSelf: 'flex-start' }} role="radiogroup" aria-label="Attack type">
+            <button type="button" role="radio" aria-checked={mode === 'drain'} className={mode === 'drain' ? 'on' : ''} onClick={() => setMode('drain')} disabled={busy}>Drain the reserve</button>
+            <button type="button" role="radio" aria-checked={mode === 'batch'} className={mode === 'batch' ? 'on' : ''} onClick={() => setMode('batch')} disabled={busy}>Small batch drain</button>
+          </div>
+          {mode === 'batch' && <p className="small t2" style={{ margin: 0 }}>Five small instant withdrawals that stay inside the hot allowance, so none is held. The watcher's pattern rules flag the burst and recommend tightening the allowance or removing the key. They never act on their own.</p>}
+          <div className="row gap12 wrap">
+            <button className="btn amb lg" onClick={go} disabled={busy || (!!w.accountId && (!isOwner || !ready))} aria-busy={busy}>
+              {busy ? <LoaderCircle className="ic spin" /> : result ? <RotateCcw className="ic" /> : <Play className="ic" />}
+              {phase === 'preparing' ? 'Preparing…' : phase === 'signing' ? 'Sign in your wallet…' : phase === 'running' ? 'Attack running…' : !w.accountId ? 'Connect wallet' : result ? 'Simulate again' : mode === 'batch' ? 'Run small batch drain' : 'Simulate an attack'}
+            </button>
+            <span className="small t3">Limit: one run per vault every 3 minutes.</span>
+          </div>
+        </div>
+        {steps.length > 0 && (
+          <ol className="stream" aria-live="polite" aria-label="Simulation steps">
+            {steps.map((e) => {
+              const Icon = e.type === 'error' ? CircleAlert : e.outcome === 'paid' ? Zap : e.outcome === 'held' || e.outcome === 'flagged' ? Hourglass : /key/i.test(e.label || '') ? KeyRound : CircleCheck;
+              return (
+                <li key={e.seq}>
+                  <span className="t">{((e.at ?? 0) / 1000).toFixed(1)}s</span>
+                  <Icon className={`ic ${e.type === 'error' ? 'red' : e.outcome ? 'amber' : 'green'}`} aria-hidden />
+                  <div className="grow"><div>{e.label || e.message}</div>{e.note && <div className="small t3 break">{e.note}</div>}</div>
+                  {e.explorer ? <a className="link small row gap4" style={{ display: 'inline-flex' }} href={e.explorer} target="_blank" rel="noreferrer" aria-label="Open transaction on NearBlocks"><span className="mono">tx</span><ExternalLink className="ic" style={{ width: 12, height: 12 }} aria-hidden /></a> : <span />}
+                </li>
+              );
+            })}
+            {phase === 'running' && <li><span className="t">…</span><LoaderCircle className="ic t3 spin" aria-hidden /><div className="grow t3">Waiting for the next block</div><span /></li>}
+          </ol>
+        )}
+      </Card>
+      {expl?.text && (
+        <Card className="mt16" title={<span className="row gap8"><Sparkles className="ic t3" aria-hidden />Why the watcher held it</span>} aside={<span className="mono small">{expl.provider}</span>}>
+          <p className="pad small t2" style={{ margin: 0, whiteSpace: 'pre-wrap' }}>{expl.text}</p>
+        </Card>
+      )}
+      {decide?.links && !result?.rescued && (
+        <Card className="mt16" title="Your move">
+          <div className="pad row gap8 wrap">
+            <Link className="btn amb" to={local(decide.links.rescue)}><ShieldCheck className="ic" />Guardian: rescue</Link>
+            <Link className="btn" to={local(decide.links.cancel)}>Owner: cancel</Link>
+            <Link className="btn ghost" to={local(decide.links.hold)}>Open the hold</Link>
+          </div>
+        </Card>
+      )}
+      {patterns.length > 0 && (
+        <Card className="mt16" title="Pattern alert" aside={<Tag tone="a">recommend only</Tag>}>
+          <ul className="list" style={{ listStyle: 'none' }}>
+            {patterns.map((p) => (
+              <li key={p.seq} className="li" style={{ alignItems: 'flex-start' }}>
+                <div className="grow stack g4"><div>{p.title}</div><div className="small t3 break">{p.evidence}</div><div className="small t2">{p.suggestion}</div></div>
+              </li>
+            ))}
+          </ul>
+          <div className="pad row gap8 wrap"><Link className="btn" to="/app/policy">Tighten allowance</Link><Link className="btn ghost" to="/app/connect">Agent keys</Link></div>
+        </Card>
+      )}
+      {result && result.mode !== 'batch' && (
+        <Card className="mt16" title={result.rescued ? 'Rescued' : `Result: ${result.status}`} aside={result.key_revoked ? <Tag tone="g" dot>attacker key revoked</Tag> : <Tag tone="a">key revokes at expiry</Tag>}>
+          <div className="pad row gap8 wrap">
+            <span className="grow small t2">{result.rescued ? <>The {nearAmt(result.drain || '0', 3)} NEAR drain never paid out; the reserve went to <span className="mono">{data.config.safe_near}</span>.</> : 'The drain is still held; it cannot pay out before its release time.'}</span>
+            {result.links && <Link className="btn" to={local(result.links.hold)}>Open the hold</Link>}
+            <Link className="btn ghost" to="/app/activity">Audit log</Link>
+          </div>
+        </Card>
+      )}
+    </>
+  );
+}
+
+function LoadingCardsLite() {
+  return <div className="card mt24 pad small t3">Loading the vault…</div>;
 }
