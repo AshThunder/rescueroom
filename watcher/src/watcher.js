@@ -67,7 +67,8 @@ export async function scoreOne(req, history, vault = VAULT) {
   await account(st.watcher).callFunction({
     contractId: VAULT,
     methodName: 'submit_score',
-    args: { id: req.id, score: result.score, confidence: result.confidence, evidence_hash: hash, signals: result.signals, signature: sig },
+    // evidence: the canonical bundle; v1.3+ vaults check its hash and publish it in an evidence_published event.
+    args: { id: req.id, score: result.score, confidence: result.confidence, evidence_hash: hash, signals: result.signals, signature: sig, evidence: canonical(bundle) },
     gas: 50n * 10n ** 12n,
   });
   console.log(`scored #${req.id}: ${result.score}/100 (conf ${result.confidence}) ${result.rawSignals.map((s) => s.code).join(', ') || 'no signals'}`);

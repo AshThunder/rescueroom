@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ChevronRight, Fingerprint, LifeBuoy, RotateCcw, Copy, Check } from 'lucide-react';
 import { useVault } from '../components/Shell';
-import { Bar, Card, Empty, ErrorState, ExtLink, Kv, LoadingCards, Tag } from '../components/ui';
+import { Bar, Card, Empty, ErrorState, ExtLink, Kv, LoadingCards, Tag, PageHeader } from '../components/ui';
 import { Ring } from '../components/Ring';
 import { StatusTag, who } from '../components/vault';
 import { DEPLOY, isOpen, useNow } from '../lib/useVault';
@@ -12,7 +12,7 @@ import { api, type IndexedEvent } from '../lib/api';
 import { describeEvent } from '../lib/events';
 import { ExternalLink } from 'lucide-react';
 
-interface Evidence { hash: string; bundle: { explanation: { provider: string; text: string }; model: string; signals: { code: string; weight: number; detail: string }[]; scored_at: string } }
+interface Evidence { hash: string; source?: 'chain' | 'file'; bundle: { explanation: { provider: string; text: string }; model: string; signals: { code: string; weight: number; detail: string }[]; scored_at: string } }
 
 export function HoldDetail() {
   const { id } = useParams();
@@ -22,8 +22,22 @@ export function HoldDetail() {
   const [copied, setCopied] = useState(false);
   const r = data?.requests.find((x) => String(x.id) === id);
   useEffect(() => {
-    if (!r?.score) return;
-    fetch(`/evidence/${DEPLOY.vault}-${r.id}.json`).then((x) => (x.ok ? x.json() : null)).then(setEv).catch(() => setEv(null));
+    const want = r?.score?.evidence_hash;
+    if (r === undefined || !want) return;
+    let stop = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const load = async () => {
+      const e = await loadEvidence(DEPLOY.vault, r.id, want);
+      if (stop) return;
+      if (e) setEv(e);
+      // The event reaches the indexer a few seconds after the score; keep looking until it does.
+      if (!e || e.source !== 'chain') timer = setTimeout(load, 10_000);
+    };
+    load();
+    return () => {
+      stop = true;
+      clearTimeout(timer);
+    };
   }, [r?.id, r?.score?.evidence_hash]);
 
   if (loading && !data) return <LoadingCards n={2} />;
@@ -41,21 +55,21 @@ export function HoldDetail() {
   const tone = r.status === 'Rescued' ? 'green' : r.status === 'Cancelled' ? 'muted' : tier?.tone === 'red' ? 'red' : 'amber';
   const isOwnerRequest = r.requester === c.owner;
   const evmTo = r.evm_tx?.to;
-  const hashMatch = ev && r.score ? ev.hash === r.score.evidence_hash : null;
+  const hashMatch = ev && r.score ? ev.hash === r.score.evidence_hash : null; // ev.hash is recomputed in the browser for chain evidence
 
   return (
     <>
-      <nav className="crumb small" aria-label="Breadcrumb"><Link className="link" to="/app/holds">Holds</Link><ChevronRight className="ic" aria-hidden /><span className="mono">{reqId(r.id)}</span></nav>
-      <div className="phead mt16">
-        <div>
-          <div className="row gap8 wrap"><StatusTag r={r} />{tier && <Tag tone={tier.tone === 'red' ? 'r' : tier.tone === 'amber' ? 'a' : undefined}>{tier.label} risk</Tag>}<span className="small t3 mono">{reqId(r.id)} · {dateTime(r.created_ms)}</span></div>
-          <h1 className="ptitle mt8">{amt(r.asset, r.amount)} to {r.asset === 'Near' ? r.to : short(r.to, 8, 6)}</h1>
-          <p className="psub">Requested by <span className="mono">{who(r)}</span>{r.hot ? ' within the hot allowance' : ' from the cold reserve'}{r.memo ? ` · “${r.memo}”` : ''}</p>
-        </div>
-        <button className="btn" onClick={() => { navigator.clipboard?.writeText(location.href); setCopied(true); setTimeout(() => setCopied(false), 1500); }}>
-          {copied ? <Check className="ic" /> : <Copy className="ic" />}{copied ? 'Copied' : 'Copy link'}
-        </button>
-      </div>
+      <PageHeader
+        crumb={<><Link className="link" to="/app/holds">Holds</Link><ChevronRight className="ic" aria-hidden /><span className="mono">{reqId(r.id)}</span></>}
+        eyebrow={<><StatusTag r={r} />{tier && <Tag tone={tier.tone === 'red' ? 'r' : tier.tone === 'amber' ? 'a' : undefined}>{tier.label} risk</Tag>}<span className="mono">{reqId(r.id)} · {dateTime(r.created_ms)}</span></>}
+        title={<>{amt(r.asset, r.amount)} to {r.asset === 'Near' ? r.to : short(r.to, 8, 6)}</>}
+        sub={<>Requested by <span className="mono">{who(r)}</span>{r.hot ? ' within the hot allowance' : ' from the cold reserve'}{r.memo ? ` · “${r.memo}”` : ''}</>}
+        actions={
+          <button className="btn" onClick={() => { navigator.clipboard?.writeText(location.href); setCopied(true); setTimeout(() => setCopied(false), 1500); }}>
+            {copied ? <Check className="ic" /> : <Copy className="ic" />}{copied ? 'Copied' : 'Copy link'}
+          </button>
+        }
+      />
 
       <div className="split mt24">
         <div className="stack g16">
@@ -99,7 +113,7 @@ export function HoldDetail() {
           </Card>
 
           {r.score && (
-            <Card title="Watcher recommendation" aside={hashMatch === null ? 'bundle not published' : hashMatch ? <Tag tone="g">hash matches on-chain</Tag> : <Tag tone="r">hash mismatch</Tag>}>
+            <Card title="Watcher recommendation" aside={hashMatch === null ? 'bundle not published' : hashMatch ? <Tag tone="g">{ev?.source === 'chain' ? 'published on-chain, hash verified' : 'hash matches on-chain'}</Tag> : <Tag tone="r">hash mismatch</Tag>}>
               <div className="pad stack g12">
                 <div className="row gap8 wrap">
                   <Tag tone={score! >= 60 ? 'g' : undefined}>{score! >= 60 ? 'Rescue unless planned' : score! >= 30 ? 'Review before release' : 'Release'}</Tag>
@@ -107,7 +121,7 @@ export function HoldDetail() {
                 </div>
                 <p>{ev?.bundle.explanation.text || 'The evidence bundle is stored by the watcher; its sha256 is logged on-chain with an ed25519 signature the contract verifies.'}</p>
                 <div className="code">
-                  {`Signed by   ${c.watcher}\nKey         ${short(c.watcher_pk, 14, 6)}\nBundle      sha256 ${r.score.evidence_hash}\nModel       ${ev?.bundle.model || 'rules-v1'}${ev ? ` · explainer ${ev.bundle.explanation.provider}` : ''}\nScored      ${dateTime(r.score.scored_at_ms)}`}
+                  {`Signed by   ${c.watcher}\nKey         ${short(c.watcher_pk, 14, 6)}\nBundle      sha256 ${r.score.evidence_hash}\nModel       ${ev?.bundle.model || 'rules-v1'}${ev ? ` · explainer ${ev.bundle.explanation.provider}` : ''}\nScored      ${dateTime(r.score.scored_at_ms)}${ev ? `\nSource      ${ev.source === 'chain' ? 'evidence_published event' : 'watcher evidence file'}` : ''}`}
                 </div>
               </div>
             </Card>
@@ -217,4 +231,36 @@ function RequestEvents({ id }: { id: number }) {
       )}
     </Card>
   );
+}
+
+async function sha256Hex(text: string) {
+  const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return [...new Uint8Array(d)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+/**
+ * Evidence for a scored request. First choice: the evidence_published event (v1.3+ vaults), whose bundle the
+ * contract already checked against the signed hash; the browser re-hashes it too. Fallback: the watcher's file.
+ */
+async function loadEvidence(vault: string, id: number, want: string): Promise<Evidence | null> {
+  try {
+    const r = await fetch(`/api/events?account=${encodeURIComponent(vault)}&request=${id}&event=evidence_published&limit=5`);
+    if (r.ok) {
+      const { events } = (await r.json()) as { events: { data: { evidence_hash?: string; evidence?: string } }[] };
+      for (const e of events) {
+        if (e.data.evidence_hash !== want || typeof e.data.evidence !== 'string') continue;
+        const hash = await sha256Hex(e.data.evidence);
+        return { hash, source: 'chain', bundle: JSON.parse(e.data.evidence) };
+      }
+    }
+  } catch {
+    /* fall through */
+  }
+  try {
+    const f = await fetch(`/evidence/${vault}-${id}.json`);
+    if (f.ok) return { ...(await f.json()), source: 'file' } as Evidence;
+  } catch {
+    /* none */
+  }
+  return null;
 }

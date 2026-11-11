@@ -93,3 +93,20 @@ export function ExtLink({ href, children }: { href: string; children: ReactNode 
     </a>
   );
 }
+
+/** One header for every page: optional breadcrumb and eyebrow, title, one-line summary, actions on the right. */
+export function PageHeader({ title, sub, actions, crumb, eyebrow }: { title: ReactNode; sub?: ReactNode; actions?: ReactNode; crumb?: ReactNode; eyebrow?: ReactNode }) {
+  return (
+    <header className="phead-wrap">
+      {crumb && <nav className="crumb small" aria-label="Breadcrumb">{crumb}</nav>}
+      <div className="phead">
+        <div className="phead-txt">
+          {eyebrow && <div className="eyebrow">{eyebrow}</div>}
+          <h1 className="ptitle">{title}</h1>
+          {sub && <p className="psub">{sub}</p>}
+        </div>
+        {actions && <div className="phead-act">{actions}</div>}
+      </div>
+    </header>
+  );
+}

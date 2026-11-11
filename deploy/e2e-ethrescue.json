@@ -1,48 +1,48 @@
 [
   {
-    "at": "2026-11-10T10:38:01.417Z",
+    "at": "2026-11-11T06:24:05.103Z",
     "name": "0.05 ETH request beyond allowance -> held",
-    "id": 15,
-    "hash": "3ymHNZVRKA4e8kxaf5GT8NWnRqyiumxadyQs1X1mA2FJ",
+    "id": 25,
+    "hash": "CNRmLBHUMdA9x3stGWxwKRx7Su8bCQAchyfwjnRB7NKT",
     "vault": "vault-v2.rescueroom-j60ox4.testnet",
-    "explorer": "https://testnet.nearblocks.io/txns/3ymHNZVRKA4e8kxaf5GT8NWnRqyiumxadyQs1X1mA2FJ"
+    "explorer": "https://testnet.nearblocks.io/txns/CNRmLBHUMdA9x3stGWxwKRx7Su8bCQAchyfwjnRB7NKT"
   },
   {
-    "at": "2026-11-10T10:38:03.863Z",
+    "at": "2026-11-11T06:24:18.603Z",
     "name": "Watcher scored it",
-    "id": 15,
-    "note": "score 50",
+    "id": 25,
+    "note": "score 60",
     "vault": "vault-v2.rescueroom-j60ox4.testnet"
   },
   {
-    "at": "2026-11-10T10:38:12.823Z",
+    "at": "2026-11-11T06:24:27.770Z",
     "name": "Guardians g2 + g3 rescued -> MPC signs transfer to safe address",
-    "id": 15,
-    "hash": "HGLwXHEBxNpf7xWpapaPdnKpgwbcCv6xty7yH5N1gpPq",
+    "id": 25,
+    "hash": "CKMQBgVHpz5JnCArdBaQutB2Z138RAL8KAgRxT7KZTr7",
     "vault": "vault-v2.rescueroom-j60ox4.testnet",
-    "explorer": "https://testnet.nearblocks.io/txns/HGLwXHEBxNpf7xWpapaPdnKpgwbcCv6xty7yH5N1gpPq"
+    "explorer": "https://testnet.nearblocks.io/txns/CKMQBgVHpz5JnCArdBaQutB2Z138RAL8KAgRxT7KZTr7"
   },
   {
-    "at": "2026-11-10T10:38:13.080Z",
+    "at": "2026-11-11T06:24:28.076Z",
     "name": "Rescue tx verified",
-    "id": 15,
+    "id": 25,
     "note": "to 0xf55b4654d6761e1F3EdEDD2f1c480FB4fD97911F (safe), from 0xFAF0Db5471b9DfD6876D349CBcAe33a6985ED31f (vault), OK",
     "vault": "vault-v2.rescueroom-j60ox4.testnet"
   },
   {
-    "at": "2026-11-10T10:38:15.179Z",
+    "at": "2026-11-11T06:24:30.134Z",
     "name": "Guardian opened DAO proposal to unfreeze",
-    "hash": "4c9v7QLDYdwpu7n4Zd5a1ngdEc5AiZvy6abaTXEdatUA",
-    "note": "proposal 13",
+    "hash": "7efPGaXR5qJB3dd74jHYzPtyQQ2AmQanD3U8ZDYsKvKe",
+    "note": "proposal 24",
     "vault": "vault-v2.rescueroom-j60ox4.testnet",
-    "explorer": "https://testnet.nearblocks.io/txns/4c9v7QLDYdwpu7n4Zd5a1ngdEc5AiZvy6abaTXEdatUA"
+    "explorer": "https://testnet.nearblocks.io/txns/7efPGaXR5qJB3dd74jHYzPtyQQ2AmQanD3U8ZDYsKvKe"
   },
   {
-    "at": "2026-11-10T10:38:21.576Z",
+    "at": "2026-11-11T06:24:37.067Z",
     "name": "DAO approved -> dao_unfreeze executed",
-    "hash": "47WstV8mudYAjoyAwvyYw7uSN7hat9u5XNPmaof5kJo1",
+    "hash": "2CAnrBxX1a7UjSwr47rJnNNmYdN2RhDz6rS6TUf6thCC",
     "note": "frozen now false",
     "vault": "vault-v2.rescueroom-j60ox4.testnet",
-    "explorer": "https://testnet.nearblocks.io/txns/47WstV8mudYAjoyAwvyYw7uSN7hat9u5XNPmaof5kJo1"
+    "explorer": "https://testnet.nearblocks.io/txns/2CAnrBxX1a7UjSwr47rJnNNmYdN2RhDz6rS6TUf6thCC"
   }
 ]

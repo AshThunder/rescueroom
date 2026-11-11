@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useVault } from '../components/Shell';
-import { Bar, Card, Empty, ErrorState, Kv, LoadingCards, Tag } from '../components/ui';
+import { Bar, Card, Empty, ErrorState, Kv, LoadingCards, Tag, PageHeader } from '../components/ui';
 import { DEPLOY } from '../lib/useVault';
 import { view } from '../lib/near';
 import { acct, dateTime, nearAmt } from '../lib/format';
@@ -37,12 +37,7 @@ export function Cover() {
   const invalid = amount !== '' && (y === null || y === 0n);
   return (
     <>
-      <div className="phead">
-        <div>
-          <h1 className="ptitle">Cover pool</h1>
-          <p className="psub">Holds protect the cold reserve. Cover backs what holds cannot stop: losses inside the hot allowance.</p>
-        </div>
-      </div>
+      <PageHeader title="Cover pool" sub={<>Holds protect the cold reserve. Cover backs what holds cannot stop: losses inside the hot allowance.</>} />
       <div className="grid g3 mt24">
         <Card title="Solvency" aside={solv === null ? <Tag>no exposure</Tag> : <Tag tone={solv >= 1 ? 'g' : 'r'} dot>{solv >= 1 ? 'solvent' : 'under-reserved'}</Tag>}>
           <div className="pad stack g8">

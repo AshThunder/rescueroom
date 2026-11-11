@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { CircleAlert, CircleCheck, ExternalLink, Hourglass, LoaderCircle, Play, RotateCcw, ShieldCheck, SquareTerminal, Zap } from 'lucide-react';
-import { Bar, Card, ExtLink, Tag } from '../components/ui';
+import { Bar, Card, ExtLink, Tag, PageHeader } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { api } from '../lib/api';
 import { nearAmt } from '../lib/format';
@@ -24,12 +24,7 @@ const RUNS: { key: string; title: string; steps: Step[] }[] = [
 export function Attack() {
   return (
     <>
-      <div className="phead">
-        <div>
-          <h1 className="ptitle">Try to drain it</h1>
-          <p className="psub">A scripted attacker holding a stolen agent key tries to empty the vault in chunks. No real-money bounty; testnet only.</p>
-        </div>
-      </div>
+      <PageHeader title="Try to drain it" sub={<>A scripted attacker holding a stolen agent key tries to empty the vault in chunks. No real-money bounty; testnet only.</>} />
       <Sandbox />
       <SepoliaLive />
       <h2 className="h3 mt32">Recorded scenario runs</h2>

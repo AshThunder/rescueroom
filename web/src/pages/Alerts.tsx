@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Bell, ExternalLink, Mail, MessageSquare, Webhook } from 'lucide-react';
-import { Card, Empty, Kv, Skeleton, Tag } from '../components/ui';
+import { Card, Empty, Kv, Skeleton, Tag, PageHeader } from '../components/ui';
 import { api } from '../lib/api';
 import { dateTime } from '../lib/format';
 
@@ -25,12 +25,7 @@ export function Alerts() {
   ];
   return (
     <>
-      <div className="phead">
-        <div>
-          <h1 className="ptitle">Alerts</h1>
-          <p className="psub">Alerts tell people a hold exists. Their buttons only open a signing page; they never sign anything themselves.</p>
-        </div>
-      </div>
+      <PageHeader title="Alerts" sub={<>Alerts tell people a hold exists. Their buttons only open a signing page; they never sign anything themselves.</>} />
       {err && <div className="banner a mt24 small" role="status">The API is not reachable ({err}). Locally, start it with <span className="mono">npm run api</span>.</div>}
       <div className="split mt24">
         <Card title="Recent alerts" aside={d ? `${d.recent.length} shown` : undefined}>

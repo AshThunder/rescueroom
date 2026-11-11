@@ -1,38 +1,23 @@
 [
   {
-    "at": "2026-11-10T10:37:16.630Z",
-    "name": "Underwriter funded cover pool with 2 NEAR",
-    "hash": "5Z22u1Z8Y6uWVJ4YZn4nFi2iwHCKcvpnHSu95N7NiRoS",
-    "vault": "vault-v2.rescueroom-j60ox4.testnet",
-    "explorer": "https://testnet.nearblocks.io/txns/5Z22u1Z8Y6uWVJ4YZn4nFi2iwHCKcvpnHSu95N7NiRoS"
-  },
-  {
-    "at": "2026-11-10T10:37:19.045Z",
-    "name": "Owner bought 1 NEAR of cover",
-    "hash": "Cv3uG4tXuvyeQmLyVsrnwBUZoHmCS96FvTQULaVMnQTu",
-    "note": "premium 0.0268 NEAR",
-    "vault": "vault-v2.rescueroom-j60ox4.testnet",
-    "explorer": "https://testnet.nearblocks.io/txns/Cv3uG4tXuvyeQmLyVsrnwBUZoHmCS96FvTQULaVMnQTu"
-  },
-  {
-    "at": "2026-11-10T10:37:43.101Z",
+    "at": "2026-11-11T06:23:45.807Z",
     "name": "Owner filed cover claim",
-    "hash": "BpkLrLjSQfsQkX2tVmqmbvqBJro4MXrtFSva83kGBNQm",
+    "hash": "3nbqiFuTdL3T1szj778GSC5jZbo2mgX8c7cAkrDSv9FP",
     "vault": "vault-v2.rescueroom-j60ox4.testnet",
-    "explorer": "https://testnet.nearblocks.io/txns/BpkLrLjSQfsQkX2tVmqmbvqBJro4MXrtFSva83kGBNQm"
+    "explorer": "https://testnet.nearblocks.io/txns/3nbqiFuTdL3T1szj778GSC5jZbo2mgX8c7cAkrDSv9FP"
   },
   {
-    "at": "2026-11-10T10:37:48.140Z",
+    "at": "2026-11-11T06:23:51.679Z",
     "name": "Guardians approved -> cover paid",
-    "hash": "6ZpaeM5HvEdmYkbEwovEWoRVdTPEcPBJMHFzAgVDJson",
-    "note": "payout 0.8000 NEAR; solvency 61220 bps",
+    "hash": "GbiUgydRrmfRBYJ88CTCqEiqVaAWMnPNGxzSTMuHAXmV",
+    "note": "payout 0.1000 NEAR; solvency 58789 bps",
     "vault": "vault-v2.rescueroom-j60ox4.testnet",
-    "explorer": "https://testnet.nearblocks.io/txns/6ZpaeM5HvEdmYkbEwovEWoRVdTPEcPBJMHFzAgVDJson"
+    "explorer": "https://testnet.nearblocks.io/txns/GbiUgydRrmfRBYJ88CTCqEiqVaAWMnPNGxzSTMuHAXmV"
   },
   {
-    "at": "2026-11-10T10:37:59.282Z",
+    "at": "2026-11-11T06:24:03.204Z",
     "name": "Cover already paid for the latest agent loss (during the attack run)",
-    "note": "claim 1, payout 0.8000 NEAR",
+    "note": "claim 3, payout 0.1000 NEAR",
     "vault": "vault-v2.rescueroom-j60ox4.testnet"
   }
 ]

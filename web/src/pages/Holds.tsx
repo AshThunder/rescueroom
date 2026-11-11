@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useVault } from '../components/Shell';
-import { Card, Empty, ErrorState, Skeleton } from '../components/ui';
+import { Card, Empty, ErrorState, Skeleton, PageHeader } from '../components/ui';
 import { RiskTag, StatusTag, describe, who } from '../components/vault';
 import { isOpen, useNow } from '../lib/useVault';
 import { acct, amt, countdown, dateTime, reqId, short } from '../lib/format';
@@ -20,17 +20,7 @@ export function Holds() {
   const rows = (data?.requests ?? []).filter((r) => (f === 'all' ? true : f === 'open' ? isOpen(r) : !isOpen(r)));
   return (
     <>
-      <div className="phead">
-        <div>
-          <h1 className="ptitle">Holds</h1>
-          <p className="psub">Every withdrawal beyond the hot allowance waits here until its hold ends, the owner cancels it, or guardians rescue.</p>
-        </div>
-        <div className="seg" role="group" aria-label="Filter">
-          {FILTERS.map(([k, l]) => (
-            <button key={k} aria-pressed={f === k} onClick={() => setF(k)}>{l}</button>
-          ))}
-        </div>
-      </div>
+      <PageHeader title="Holds" sub={<>Every withdrawal beyond the hot allowance waits here until its hold ends, the owner cancels it, or guardians rescue.</>} actions={<><div className="seg" role="group" aria-label="Filter"> {FILTERS.map(([k, l]) => ( <button key={k} aria-pressed={f === k} onClick={() => setF(k)}>{l}</button> ))} </div></>} />
       <Card className="mt24">
         {loading && !data ? (
           <div className="pad stack g12">{[0, 1, 2].map((i) => <Skeleton key={i} h={20} />)}</div>

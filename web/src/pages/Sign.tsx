@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { Check, ChevronRight, Copy, ExternalLink, LogOut, PenLine, ShieldCheck, TriangleAlert, Wallet } from 'lucide-react';
 import { useVault } from '../components/Shell';
-import { Card, Empty, ErrorState, Kv, LoadingCards } from '../components/ui';
+import { Card, Empty, ErrorState, Kv, LoadingCards, PageHeader } from '../components/ui';
 import { useToast } from '../components/Toast';
 import { cliCommand, spec, type CallSpec, type Field } from '../lib/calls';
 import { reqId } from '../lib/format';
@@ -104,16 +104,11 @@ function SignBody({ s, r, onQuote, refresh }: { s: CallSpec; r?: number; onQuote
 
   return (
     <>
-      <nav className="crumb small" aria-label="Breadcrumb">
-        {r !== undefined ? <><Link className="link" to={`/app/holds/${r}`}>{reqId(r)}</Link><ChevronRight className="ic" aria-hidden /></> : null}
-        <span>Sign</span>
-      </nav>
-      <div className="phead mt16">
-        <div>
-          <h1 className="ptitle">{s.title}</h1>
-          <p className="psub">Alert buttons only open this page. Nothing is signed until you approve it in your own wallet.</p>
-        </div>
-      </div>
+      <PageHeader
+        crumb={<>{r !== undefined ? <><Link className="link" to={`/app/holds/${r}`}>{reqId(r)}</Link><ChevronRight className="ic" aria-hidden /></> : null}<span>Sign</span></>}
+        title={s.title}
+        sub="Alert buttons only open this page. Nothing is signed until you approve it in your own wallet."
+      />
       <div className="split mt24">
         <div className="stack g16">
           {s.fields.length > 0 && (

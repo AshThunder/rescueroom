@@ -1,0 +1,110 @@
+{
+  "base": "http://127.0.0.1:5173",
+  "at": "2026-11-10T11:37:57.031Z",
+  "results": [
+    {
+      "step": "New withdrawal (owner)",
+      "path": "in-page function-call key",
+      "signer": "owner.rescueroom-j60ox4.testnet",
+      "method": "request_withdraw",
+      "args": {
+        "asset": "Near",
+        "to": "unknown-payee.testnet",
+        "amount": "1500000000000000000000000",
+        "memo": "wallet e2e: held then cancelled"
+      },
+      "deposit": "0",
+      "gas_tgas": 100,
+      "matches_cli": true,
+      "tx": "6oDf3AkpAMTrrRgYJg74PBRPzBZTVKvwqFVttrMZdSmz",
+      "explorer": "https://testnet.nearblocks.io/txns/6oDf3AkpAMTrrRgYJg74PBRPzBZTVKvwqFVttrMZdSmz",
+      "returned": "17"
+    },
+    {
+      "step": "Vote rescue (guardian, 1 of 2)",
+      "path": "in-page function-call key",
+      "signer": "g3.rescueroom-j60ox4.testnet",
+      "method": "vote_rescue",
+      "args": {
+        "id": 17
+      },
+      "deposit": "0",
+      "gas_tgas": 100,
+      "matches_cli": true,
+      "tx": "74caXAZkumPStwYXwVo1jw1q36SaN6hpVxZBvTXLcGLd",
+      "explorer": "https://testnet.nearblocks.io/txns/74caXAZkumPStwYXwVo1jw1q36SaN6hpVxZBvTXLcGLd"
+    },
+    {
+      "step": "Cancel withdrawal (owner)",
+      "path": "in-page function-call key",
+      "signer": "owner.rescueroom-j60ox4.testnet",
+      "method": "cancel",
+      "args": {
+        "id": 17
+      },
+      "deposit": "0",
+      "gas_tgas": 30,
+      "matches_cli": true,
+      "tx": "AqpXM4ofwyqBakMfbHXmfBmuh9TxMYjkjcLL2Nfvasq2",
+      "explorer": "https://testnet.nearblocks.io/txns/AqpXM4ofwyqBakMfbHXmfBmuh9TxMYjkjcLL2Nfvasq2"
+    },
+    {
+      "step": "Buy cover 0.1 NEAR (owner, deposit)",
+      "path": "wallet popup (/sign)",
+      "signer": "owner.rescueroom-j60ox4.testnet",
+      "method": "buy_cover",
+      "args": {
+        "coverage": "100000000000000000000000"
+      },
+      "deposit": "2780000000000000000000",
+      "gas_tgas": 50,
+      "matches_cli": true,
+      "tx": "CtkxrinxwR8KKXVMjNpjTgyjsfFKKgUBZrVtPt6s1LBB",
+      "explorer": "https://testnet.nearblocks.io/txns/CtkxrinxwR8KKXVMjNpjTgyjsfFKKgUBZrVtPt6s1LBB",
+      "returned": "2"
+    },
+    {
+      "step": "File cover claim (owner)",
+      "path": "in-page function-call key",
+      "signer": "owner.rescueroom-j60ox4.testnet",
+      "method": "file_claim",
+      "args": {
+        "policy_id": 2,
+        "amount": "50000000000000000000000",
+        "request_id": null,
+        "reason": "wallet e2e test claim"
+      },
+      "deposit": "0",
+      "gas_tgas": 50,
+      "matches_cli": true,
+      "tx": "FL2MMjstWN2yy8PgMBTnC2WFrqVorVPZ2ohzmtZp9XCz",
+      "explorer": "https://testnet.nearblocks.io/txns/FL2MMjstWN2yy8PgMBTnC2WFrqVorVPZ2ohzmtZp9XCz",
+      "returned": "2"
+    },
+    {
+      "step": "Approve claim (guardian, 1 of 2)",
+      "path": "in-page function-call key",
+      "signer": "g3.rescueroom-j60ox4.testnet",
+      "method": "vote_claim",
+      "args": {
+        "claim_id": 2
+      },
+      "deposit": "0",
+      "gas_tgas": 100,
+      "matches_cli": true,
+      "tx": "EGbyakK45nsgJ26hT4mGgGdhJq1kAG4Km2f2D5uVCFip",
+      "explorer": "https://testnet.nearblocks.io/txns/EGbyakK45nsgJ26hT4mGgGdhJq1kAG4Km2f2D5uVCFip"
+    }
+  ],
+  "notes": [
+    "could not delete test key on owner.rescueroom-j60ox4.testnet: Unsupported public key format",
+    "could not delete test key on g3.rescueroom-j60ox4.testnet: Unsupported public key format",
+    "could not delete test key on owner.rescueroom-j60ox4.testnet: Unsupported public key format",
+    "could not delete test key on g3.rescueroom-j60ox4.testnet: Unsupported public key format"
+  ],
+  "request_id": 17,
+  "claim_id": 2,
+  "final_request_status": "Cancelled",
+  "test_keys_removed": 4,
+  "page_errors": []
+}

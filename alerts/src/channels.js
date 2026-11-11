@@ -4,6 +4,9 @@
 //   Email:    SMTP_URL (smtp:// or smtps://user:pass@host:port), ALERT_EMAIL_TO, ALERT_EMAIL_FROM
 import crypto from 'node:crypto';
 import nodemailer from 'nodemailer';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 const env = (k, e = process.env) => (e[k] || '').trim();
 
@@ -54,8 +57,24 @@ export function resetEmailTransport() {
   transport = undefined;
 }
 
+// Channels to skip, e.g. ALERT_MUTE=telegram,email, or a mute file the operator can toggle at runtime:
+// ~/.rescueroom/alerts-mute.json  {"channels": ["telegram"], "until": <ms epoch, optional>}
+export function mutedChannels(e = process.env) {
+  const out = new Set(env('ALERT_MUTE', e).split(',').map((x) => x.trim()).filter(Boolean));
+  const file = env('ALERT_MUTE_FILE', e) || path.join(os.homedir(), '.rescueroom', 'alerts-mute.json');
+  try {
+    const m = JSON.parse(fs.readFileSync(file, 'utf8'));
+    if (!m.until || Date.now() < m.until) for (const c of m.channels || []) out.add(c);
+  } catch {
+    /* no mute file */
+  }
+  return out;
+}
+
 export async function deliver(a, e = process.env) {
+  const muted = mutedChannels(e);
   const run = async (fn) => {
+    if (muted.has(fn.name)) return 'muted';
     try {
       return await fn(a, e);
     } catch (err) {

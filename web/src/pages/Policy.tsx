@@ -1,5 +1,5 @@
 import { useVault } from '../components/Shell';
-import { Card, ErrorState, ExtLink, Kv, LoadingCards, Tag } from '../components/ui';
+import { Card, ErrorState, ExtLink, Kv, LoadingCards, Tag, PageHeader } from '../components/ui';
 import { DEPLOY } from '../lib/useVault';
 import { duration, ethAmt, nearAmt, short } from '../lib/format';
 import { etherscanAddr, nearblocksAcct } from '../lib/near';
@@ -13,13 +13,7 @@ export function PolicyPage() {
   const t = (secs: number) => (secs ? `${duration(secs)}${div > 1 ? ` (demo ${duration(secs / div)})` : ''}` : 'none');
   return (
     <>
-      <div className="phead">
-        <div>
-          <h1 className="ptitle">Policy</h1>
-          <p className="psub">Read live from the vault. The owner can only tighten limits; anything that loosens safety goes through a DAO proposal.</p>
-        </div>
-        {div > 1 && <Tag tone="a">Demo clock: 1 h = {60 / div} min</Tag>}
-      </div>
+      <PageHeader title="Policy" sub={<>Read live from the vault. The owner can only tighten limits; anything that loosens safety goes through a DAO proposal.</>} actions={<>{div > 1 && <Tag tone="a">Demo clock: 1 h = {60 / div} min</Tag>}</>} />
       <div className="grid g2 mt24">
         <Card title="Hold tiers">
           <div className="tblwrap">

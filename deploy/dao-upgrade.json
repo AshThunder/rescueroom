@@ -1,15 +1,15 @@
 {
-  "at": "2026-11-10T10:11:02.468Z",
+  "at": "2026-11-10T11:34:42.240Z",
   "vault": "vault-v2.rescueroom-j60ox4.testnet",
-  "from": "1.1.0",
-  "to": "1.1.1",
+  "from": "1.1.1",
+  "to": "1.3.0",
   "mode": "inline",
-  "code_hash": "2W9XSLGi34btWs2ryM41kWE2x8uMoAGdFivM989ociA6",
-  "proposal": 7,
+  "code_hash": "H3Fw4CzUWkki56agoLyi8AAeBFXvypNkLWBj1KcqEUWy",
+  "proposal": 21,
   "txs": {
     "store_blob": null,
-    "add_proposal": "GQcResnsjVxe3i3SJ2hWy3DwqA8PL95HkeUJNh1qyGpT",
-    "approve_execute": "4q2TYvmy6orAuEsbLMSo4fE7EJwnj9g9SLrbGckyJ1VJ",
+    "add_proposal": "4nAAhF5rzgrtpdFtp6trEsg3g9yE4rihQt7VqAdFVBSF",
+    "approve_execute": "5GhAF6V97TciXsXxfbeP8h9jav4HMUzao3w44TfFYz6M",
     "remove_blob": null
   }
 }

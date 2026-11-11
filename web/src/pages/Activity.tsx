@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ExternalLink, RefreshCw } from 'lucide-react';
 import { useVault } from '../components/Shell';
-import { Card, Empty, ErrorState, Skeleton, Tag } from '../components/ui';
+import { Card, Empty, ErrorState, Skeleton, Tag, PageHeader } from '../components/ui';
 import { api, type IndexedEvent } from '../lib/api';
 import { describeEvent, type Group } from '../lib/events';
 import { acct, dateTime, reqId } from '../lib/format';
@@ -39,15 +39,7 @@ export function Activity() {
   const rows = (events || []).map((e) => ({ e, d: describeEvent(e) })).filter((x) => f === 'all' || x.d.group === f);
   return (
     <>
-      <div className="phead">
-        <div>
-          <h1 className="ptitle">Audit log</h1>
-          <p className="psub">NEP-297 events emitted by <span className="mono">{DEPLOY.vault}</span> (<span className="mono">standard: rescueroom</span>), indexed from NEAR testnet.</p>
-        </div>
-        <div className="seg" role="group" aria-label="Filter events">
-          {FILTERS.map((x) => <button key={x.key} aria-pressed={f === x.key} onClick={() => setF(x.key)}>{x.label}</button>)}
-        </div>
-      </div>
+      <PageHeader title="Audit log" sub={<>NEP-297 events emitted by <span className="mono">{DEPLOY.vault}</span> (<span className="mono">standard: rescueroom</span>), indexed from NEAR testnet.</>} actions={<><div className="seg" role="group" aria-label="Filter events"> {FILTERS.map((x) => <button key={x.key} aria-pressed={f === x.key} onClick={() => setF(x.key)}>{x.label}</button>)} </div></>} />
       <Card className="mt24" title="Events" aside={<>{sync ? <>synced {dateTime(sync)}</> : null}<button className="btn ghost sm" onClick={load} aria-label="Refresh events"><RefreshCw className="ic" /></button></>}>
         {err && !events ? (
           <ErrorState error={`Event indexer unavailable (${err}). Start it with: npm run api`} onRetry={load} />

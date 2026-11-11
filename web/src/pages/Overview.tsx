@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight, Lock, Plus, ShieldAlert, SlidersHorizontal, SquareTerminal, Wallet, Zap } from 'lucide-react';
 import { useVault } from '../components/Shell';
-import { Bar, Card, Empty, ErrorState, LoadingCards, Tag } from '../components/ui';
+import { Bar, Card, Empty, ErrorState, LoadingCards, Tag, PageHeader } from '../components/ui';
 import { Ring } from '../components/Ring';
 import { RiskTag, StatusTag, describe, who } from '../components/vault';
 import { DEPLOY, isOpen, useNow } from '../lib/useVault';
@@ -154,15 +154,13 @@ function progress(r: { created_ms: string; release_ms: string }, now: number) {
 
 function Header({ sub }: { sub?: React.ReactNode }) {
   return (
-    <div className="phead">
-      <div>
-        <h1 className="ptitle">Demo treasury</h1>
-        <p className="psub">{sub || '\u00a0'}</p>
-      </div>
-      <div className="row gap8">
+    <PageHeader
+      title="Demo treasury"
+      sub={sub || '\u00a0'}
+      actions={<>
         <Link className="btn" to="/app/policy"><SlidersHorizontal className="ic" />Policy</Link>
         <Link className="btn pri" to="/app/sign/request/new"><Plus className="ic" />New withdrawal</Link>
-      </div>
-    </div>
+      </>}
+    />
   );
 }

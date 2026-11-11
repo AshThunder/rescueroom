@@ -26,11 +26,13 @@ pub mod evm;
 const EVENT_STANDARD: &str = "rescueroom";
 const VERSION: &str = match option_env!("RR_VERSION") {
     Some(v) => v,
-    None => "1.2.0",
+    None => "1.3.0",
 };
 const EVENT_VERSION: &str = "1.0.0";
 /// broadcast_hash marker for a signed tx replaced by `dao_resync_evm_nonce`.
 pub const SUPERSEDED: &str = "superseded";
+/// Largest evidence bundle `submit_score` will publish in an event.
+const MAX_EVIDENCE_BYTES: usize = 6_000;
 const MS: u64 = 1_000;
 const NEAR_BUFFER: u128 = 500_000_000_000_000_000_000_000; // 0.5 NEAR kept for gas/storage
 const AGENT_KEY_ALLOWANCE: u128 = 1_000_000_000_000_000_000_000_000; // 1 NEAR of gas
@@ -465,6 +467,7 @@ impl Vault {
         evidence_hash: String,
         signals: Vec<Signal>,
         signature: String,
+        evidence: Option<String>,
     ) {
         require!(env::predecessor_account_id() == self.config.watcher, "only watcher");
         require!(score <= 100 && confidence <= 100, "score/confidence 0-100");
@@ -502,6 +505,13 @@ impl Vault {
             json!({ "id": id, "score": score, "confidence": confidence, "evidence_hash": evidence_hash,
                     "signals": signals, "hold_secs": hold, "release_ms": req.release_ms, "status": req.status }),
         );
+        // Publish the evidence bundle itself (canonical JSON) so anyone can read the explanation from
+        // chain events. The contract checks it hashes to the signed evidence_hash.
+        if let Some(ev) = evidence {
+            require!(ev.len() <= MAX_EVIDENCE_BYTES, "evidence too large");
+            require!(hex::encode(env::sha256(ev.as_bytes())) == evidence_hash, "evidence does not match evidence_hash");
+            emit("evidence_published", json!({ "id": id, "evidence_hash": evidence_hash, "evidence": ev }));
+        }
         self.requests.insert(id, req);
     }
 

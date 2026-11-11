@@ -74,7 +74,7 @@ const H: &str = "111111111111111111111111111111111111111111111111111111111111111
 fn score(v: &mut Vault, id: u64, s: u8, ts: u64) {
     testing_env!(ctx("watcher.testnet", ts).build());
     let sig = sign_score(id, s, 90, H);
-    v.submit_score(id, s, 90, H.into(), vec![Signal { code: "new_destination".into(), weight: 30, detail: "never paid".into() }], sig);
+    v.submit_score(id, s, 90, H.into(), vec![Signal { code: "new_destination".into(), weight: 30, detail: "never paid".into() }], sig, None);
 }
 
 #[test]
@@ -125,7 +125,7 @@ fn forged_score_rejected() {
     let id = v.request_withdraw(Asset::Near, "x.testnet".into(), U128(500 * NEAR), None);
     testing_env!(ctx("watcher.testnet", 3_000).build());
     let sig = sign_score(id, 90, 90, H); // signed 90, submits 5
-    v.submit_score(id, 5, 90, H.into(), vec![], sig);
+    v.submit_score(id, 5, 90, H.into(), vec![], sig, None);
 }
 
 #[test]
@@ -135,7 +135,7 @@ fn only_watcher_scores() {
     testing_env!(ctx("owner.testnet", 2_000).build());
     let id = v.request_withdraw(Asset::Near, "x.testnet".into(), U128(500 * NEAR), None);
     let sig = sign_score(id, 0, 90, H);
-    v.submit_score(id, 0, 90, H.into(), vec![], sig);
+    v.submit_score(id, 0, 90, H.into(), vec![], sig, None);
 }
 
 #[test]
@@ -467,4 +467,29 @@ fn evm_nonce_cannot_jump_forward() {
     let mut v = setup();
     testing_env!(ctx("dao.sputnik-v2.testnet", 2_000).build());
     v.dao_resync_evm_nonce(5);
+}
+
+#[test]
+fn evidence_bundle_is_published_when_it_matches_the_hash() {
+    let mut v = setup();
+    testing_env!(ctx("owner.testnet", 2_000).build());
+    let id = v.request_withdraw(Asset::Near, "x.testnet".into(), U128(50 * NEAR), None);
+    let ev = r#"{"explanation":{"provider":"test","text":"first payment to x"},"score":50}"#;
+    let hash = hex::encode(near_sdk::env::sha256(ev.as_bytes()));
+    testing_env!(ctx("watcher.testnet", 3_000).build());
+    let sig = sign_score(id, 50, 90, &hash);
+    v.submit_score(id, 50, 90, hash.clone(), vec![], sig, Some(ev.into()));
+    let logs = near_sdk::test_utils::get_logs();
+    assert!(logs.iter().any(|l| l.contains("evidence_published") && l.contains("first payment to x")));
+}
+
+#[test]
+#[should_panic(expected = "evidence does not match evidence_hash")]
+fn evidence_bundle_must_match_the_signed_hash() {
+    let mut v = setup();
+    testing_env!(ctx("owner.testnet", 2_000).build());
+    let id = v.request_withdraw(Asset::Near, "x.testnet".into(), U128(50 * NEAR), None);
+    testing_env!(ctx("watcher.testnet", 3_000).build());
+    let sig = sign_score(id, 50, 90, H);
+    v.submit_score(id, 50, 90, H.into(), vec![], sig, Some("{\"forged\":true}".into()));
 }

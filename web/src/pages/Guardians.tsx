@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useVault } from '../components/Shell';
-import { Card, ErrorState, ExtLink, Kv, LoadingCards, Tag } from '../components/ui';
+import { Card, ErrorState, ExtLink, Kv, LoadingCards, Tag, PageHeader } from '../components/ui';
 import { nearblocksAcct } from '../lib/near';
 
 export function Guardians() {
@@ -11,13 +11,7 @@ export function Guardians() {
   const votes = (g: string) => requests.filter((r) => r.approvals.includes(g)).length + claims.filter((x) => x.approvals.includes(g)).length;
   return (
     <>
-      <div className="phead">
-        <div>
-          <h1 className="ptitle">Guardians</h1>
-          <p className="psub">Members of the <span className="mono">{c.guardian_role}</span> role in the vault's Sputnik DAO. No staking, no slashing.</p>
-        </div>
-        <Link className="btn" to="/app/sign/unfreeze/0">Propose unfreeze</Link>
-      </div>
+      <PageHeader title="Guardians" sub={<>Members of the <span className="mono">{c.guardian_role}</span> role in the vault's Sputnik DAO. No staking, no slashing.</>} actions={<><Link className="btn" to="/app/sign/unfreeze/0">Propose unfreeze</Link></>} />
       <div className="split wide mt24">
         <Card title="Council" aside={<span className="mono">{s.guardians.length} members</span>}>
           <div className="tblwrap">

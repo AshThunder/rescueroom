@@ -69,7 +69,7 @@ Current ids are in [`deploy/testnet.json`](deploy/testnet.json) and [`deploy/san
 
 | | Account |
 | --- | --- |
-| Demo treasury vault (locked, v1.1.1) | [`vault-v2.rescueroom-j60ox4.testnet`](https://testnet.nearblocks.io/address/vault-v2.rescueroom-j60ox4.testnet) |
+| Demo treasury vault (locked, v1.3.0) | [`vault-v2.rescueroom-j60ox4.testnet`](https://testnet.nearblocks.io/address/vault-v2.rescueroom-j60ox4.testnet) |
 | Attacker sandbox vault (locked) | [`sandbox.rescueroom-j60ox4.testnet`](https://testnet.nearblocks.io/address/sandbox.rescueroom-j60ox4.testnet) |
 | Guardian DAO (council g1, g2, g3; 2 of 3) | [`rescueroom-j60ox4-guardians.sputnik-v2.testnet`](https://testnet.nearblocks.io/address/rescueroom-j60ox4-guardians.sputnik-v2.testnet) |
 | Vault's Sepolia address (MPC path `rescueroom-eth-1`) | [`0xFAF0Db5471b9DfD6876D349CBcAe33a6985ED31f`](https://sepolia.etherscan.io/address/0xFAF0Db5471b9DfD6876D349CBcAe33a6985ED31f) |
@@ -86,6 +86,14 @@ Real Sepolia transactions signed by a Rescue Room vault through NEAR chain signa
 
 Signer: `vault.rescueroom-j60ox4.testnet`, Sepolia address [`0x89250Ea4…179B74`](https://sepolia.etherscan.io/address/0x89250Ea451fE4141aE4C31584E41841f53179B74). The first attempt ([`0xc6b51cca`](https://sepolia.etherscan.io/tx/0xc6b51cca4295135ae7efb295c2047993c9c801b3b14aa9393747aa17672118d1)) used a 21,000 gas limit and ran out of gas: Sepolia now charges about 207k gas for a value transfer that creates a new account. A DAO proposal raised the vault's gas limit to 220k (cap 2 gwei, tip 0.2 gwei) and called the new `dao_resync_evm_nonce`, which rewinds the vault's nonce to the chain nonce and marks stale signed transactions as superseded so one unmineable transaction cannot block the queue.
 
+## Live explanations
+
+The watcher sends its evidence bundle (canonical JSON: request, signals, score, explanation) with every score. Since v1.3.0 the vault checks that the bundle's sha256 equals the signed `evidence_hash` and emits it in an `evidence_published` NEP-297 event. Hold pages read that event through `/api/events`, hash it again in the browser, and show the explanation with "published on-chain, hash verified". New explanations appear on the hosted site within about 30 seconds, without a redeploy. Bundles over 6 KB are rejected; older vaults ignore the extra argument and the page falls back to the watcher's evidence file.
+
+## Wallet signing tests
+
+`e2e/wallet-e2e.mjs` drives the real app through NEAR Wallet Selector and MyNearWallet, with the wallet site replaced by a scripted test wallet that signs with local testnet keys (they never enter the page). For each flow it checks that the transaction the wallet receives or the page broadcasts matches the page's NEAR CLI fallback exactly: signer, contract, method, arguments, gas and deposit. Flows: new withdrawal, guardian rescue vote, cancel, buy cover (deposit, wallet popup path), file claim, guardian claim approval. Results: [`deploy/wallet-e2e.json`](deploy/wallet-e2e.json). Meteor and HERE, and MyNearWallet's own approval screen, still need a manual click.
+
 ## Hosting
 
 The web app and a small public API run on Vercel (`vercel/`, assembled by `node scripts/vercel-build.mjs` into `.vercel-out/`).
@@ -101,6 +109,20 @@ The public sandbox function holds only the sandbox agent key: a function-call ke
 
 Telegram: start a chat with the bot and send `/start`. When `TELEGRAM_CHAT_ID` is unset, the API picks the chat id from the first private `/start`, saves it to `~/.rescueroom/telegram.json` (mode 600) and `.env`, and sends a test alert. Alert buttons open the hosted signing pages. Alerts from the public sandbox vault are logged but not delivered unless `ALERT_SANDBOX=1`.
 
+## The defending service (one host for now)
+
+The public sandbox and alert delivery depend on one process, `server/src/index.js`, running on a single operator host. It holds the privileged keys that must never be on a public server: the watcher (scores and signs evidence), two guardians (sandbox rescue votes and DAO resets), the owner (re-adds the sandbox agent key) and the relayer. It also runs the event indexer and delivers Telegram, webhook and email alerts. If it stops, the vault contract still enforces every hold; requests simply wait unscored (with the unscored hold) and nobody gets alerted.
+
+Run it:
+
+```bash
+cp .env.example .env              # set TELEGRAM_*, ALERT_WEBHOOK_*, SMTP_*, NEAR_AI_API_KEY as needed
+nohup scripts/run-api.sh >/dev/null 2>&1 &   # restarts the API if it exits; logs to ~/.rescueroom/api.log (600)
+curl -s 127.0.0.1:8787/api/health  # indexer, sandbox defender and alert channels
+```
+
+Keys are read from `~/.rescueroom/keys/` (mode 600). Mute a channel at runtime with `~/.rescueroom/alerts-mute.json`, for example `{"channels":["telegram"]}`, or with `ALERT_MUTE=telegram`. Sandbox alerts are logged only unless `ALERT_SANDBOX=1`. The restart loop does not survive a reboot; use systemd or similar on a real host. Running a second defender host would need a shared lock so two hosts do not vote or reset at the same time.
+
 ## Setup
 
 Requirements: Node 22+, Rust stable 1.95+ with `wasm32-unknown-unknown`, `cargo-near` 0.23, and a funded NEAR testnet account.
@@ -108,7 +130,7 @@ Requirements: Node 22+, Rust stable 1.95+ with `wasm32-unknown-unknown`, `cargo-
 ```bash
 npm install && (cd web && npm install)
 cp .env.example .env            # every integration is optional; see below
-npm test                        # 33 contract tests + 14 watcher, alert and API tests
+npm test                        # 35 contract tests + 14 watcher, alert and API tests
 npm run build:contract
 
 node scripts/deploy.mjs <main>.testnet          # roles, guardian DAO, demo vault
@@ -146,7 +168,7 @@ node scripts/dao-upgrade.mjs path/to/new.wasm 1.1.1
 
 This opens a Sputnik `FunctionCall` proposal to `vault.upgrade(<wasm bytes>)`; when two guardians approve, the DAO calls it, the vault checks the caller is the DAO, deploys the code and calls `migrate`. Sputnik's `UpgradeRemote` blob path keeps only 15 Tgas for itself after forwarding the code, which a ~345 KB wasm exceeds on the testnet factory version, so the inline path is the default (`UPGRADE_MODE=blob` uses the blob path for smaller code).
 
-Proof on testnet: full-access key deleted in [`9rfXEqGQ`](https://testnet.nearblocks.io/txns/9rfXEqGQnhTbQCMS3Xde3FW8E741me7FqtySwqWJxicV); DAO proposal 7 upgraded 1.1.0 to 1.1.1 in [`4q2TYvmy`](https://testnet.nearblocks.io/txns/4q2TYvmy6orAuEsbLMSo4fE7EJwnj9g9SLrbGckyJ1VJ) (events `upgrade_started`, `upgraded`). A direct call to `upgrade` from any other account fails with "only guardian DAO".
+Proof on testnet: DAO proposal 21 upgraded 1.1.1 to 1.3.0 in [`5GhAF6V9`](https://testnet.nearblocks.io/txns/5GhAF6V97TciXsXxfbeP8h9jav4HMUzao3w44TfFYz6M). Earlier: full-access key deleted in [`9rfXEqGQ`](https://testnet.nearblocks.io/txns/9rfXEqGQnhTbQCMS3Xde3FW8E741me7FqtySwqWJxicV); DAO proposal 7 upgraded 1.1.0 to 1.1.1 in [`4q2TYvmy`](https://testnet.nearblocks.io/txns/4q2TYvmy6orAuEsbLMSo4fE7EJwnj9g9SLrbGckyJ1VJ) (events `upgrade_started`, `upgraded`). A direct call to `upgrade` from any other account fails with "only guardian DAO".
 
 ## Demo run
 
